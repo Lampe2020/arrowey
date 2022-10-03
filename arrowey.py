@@ -80,3 +80,21 @@ for line in parsedcode_3: # debug
     print(line.strip(), end=";") # debug
 print() # debug
 exit()
+
+# Variable detection, currently unreachable because of exit() above:
+
+import re
+txt = 'out:"Hello World!";end:<hello_world>'
+x = re.search("end:<.*>$", txt) # Explanation:
+# . stands for any character 1 time
+# * stands for the previous character (group) zero or more times
+# $ stands for match only at the end of the string
+# thereby this regex finds all strings ending with `end:<>` and with any text between the `<` and the `>`.
+
+print(x)
+
+if x.span()[1] == len(txt):
+  print("YES! We have a match!")
+else:
+  print("No match")
+
