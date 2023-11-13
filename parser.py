@@ -16,9 +16,9 @@ Variable_reference          = [ "g" ] [ "c" | "i" | "d" ] Flagless_variable_refe
 Object_property_reference   = Expression ";;" ( Flagless_variable_reference | Function_call ) ;
 Flagless_variable_reference = "<" [ ( "0" | "1" | Identifier ) ] ">" ;
 Identifier                  = ( letter | "_" ) { ( letter | digit | "_" ) } ;
-String                      = ( '"' { character | "'" } '"' ) | ( "'" { character | '"' } "'" ) ; (* To print out the character used to create the string, use the escape sequence `\ssqu;` for single quote and `\sdqu;` for a double quote. Arrows (that are also separators) in strings can be produced with `\saru;` (↑), `\sard;` (↓), `\sarl;` (←) and `\sarr;` (→). To literally write such an escape sequence, just prefix it with an even amount of backslashes. Escape sequences such as `\n` for newline (UNIX style) and `\r` for carriage return are also valid. `\s[…];` stands for "special character" and is the only escape sequence that has to be terminated with a semicolon. *)
+String                      = ( '"' { CHARACTER | "'" } '"' ) | ( "'" { CHARACTER | '"' } "'" ) ; (* To print out the character used to create the string, use the escape sequence `\ssqu;` for single quote and `\sdqu;` for a double quote. Arrows (that are also separators) in strings can be produced with `\saru;` (↑), `\sard;` (↓), `\sarl;` (←) and `\sarr;` (→). To literally write such an escape sequence, just prefix it with an even amount of backslashes. Escape sequences such as `\n` for newline (UNIX style) and `\r` for carriage return are also valid. `\s[…];` stands for "special character" and is the only escape sequence that has to be terminated with a semicolon. *)
 Regex                       = { "g" | "i" | "m" | "s" | "u" | "y" } "#" String ; (* Flags: global, case insensitive, multiline, dotall, unicode, sticky. *)
-character                   = /[^"']/ ;
+CHARACTER                   = /[^"']/ ;
 Object                      = "{" { ( String | Variable_reference ) equal_sign Expression "," zero_to_infinite_space } "}" ; (* Maybe fix it up to not require a comma after each property *)
 Array                       = [ "c" ] "a" "{" { Expression "," zero_to_infinite_space } "}" ;
 arraylike_access            = Expression "{" ( Integer_number | Variable_reference ) [ "_" ( Integer_number | Variable_reference ) [ "_" ( Integer_number | Variable_reference ) ] ] "}" ; (* indices are built like this (see square braces as "make optional"): `{startindex[_endindex[_steplength]]}` *)
@@ -54,4 +54,17 @@ dotarithmetic_expression    = Expression dot_operator Expression ;
 dasharithmetic_expression   = Expression dash_operator Expression ;
 """
 model = tatsu.compile(ebnf, 'arrowey')
-print(model.parse("""<do_smth> <arg> [out: a{"Hello World", 3•5:3, gu#".*", <arg>,}] → end: (do_smth: {<XD>=5,}){1} → "x"?3•3*NaN""")) #FIXME: Returns garbage AST, probably need to redefine what rules are subsyntaxes and which are constructs in arrowey
+# print(model.parse("""<do_smth> <arg> [out: a{"Hello World", 3•5:3, gu#".*", <arg>,}] → end: (do_smth: {<XD>=5,}){1} → "x"?3•3*NaN""")) #FIXME: Returns garbage AST, probably need to redefine what rules are subsyntaxes and which are constructs in arrowey
+#DEBUG:
+print('[i] To exit the input loop, type "end:0", without the quotes.\n[i] Note that this only generates ASTs and doesn\'t actually run the code.')
+while True: # Never do so outside of debugging!
+    inp = input('···arrowey···> ')
+    if inp!='end:0':
+        AST = model.parse(inp)
+        if AST!=([],[],[],[]):
+            print(AST)
+        else:
+            print('[-] Syntax error or empty input!')
+    else:
+        print('[i] arrowey stopped')
+        break
