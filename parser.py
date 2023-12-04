@@ -1,5 +1,6 @@
 import tatsu
 ebnf = r"""
+@@whitespace :: //
 (* EBNF syntax compatible with python module TatSu (https://tatsu.readthedocs.io) *)
 Program                     = ZERO_TO_INFINITE_SPACE { expression_separator } [ Expression | Scope ] { expression_separator { expression_separator } [ Expression | Scope ] } ZERO_TO_INFINITE_SPACE ; (* Note: the script itself has to end in an `end: ` statement with one argument which can be <> <0> <1> or any integer Number. If it doesn't it will run into the next wall and crash that way. *)
 Scope                       = "[" Program "]" ; (* enclosing a set of instructions in squared braces sets it into an own Scope *)
@@ -53,16 +54,19 @@ powerarithmetic_expression  = Expression power_operator Expression ;
 dotarithmetic_expression    = Expression dot_operator Expression ;
 dasharithmetic_expression   = Expression dash_operator Expression ;
 """
-model = tatsu.compile(ebnf, 'arrowey') # Why does whitespace='' break the syntax above? #TODO: Find out how to let it always take whitespace into account inside the expressions when parsing, but not inside the syntax definition!
-# print(model.parse("""<do_smth> <arg> [out: a{"Hello World", 3•5:3, gu#".*", <arg>,}] → end: (do_smth: {<XD>=5,}){1} → "x"?3•3*NaN""")) #FIXME: Returns garbage AST, probably need to redefine what rules are subsyntaxes and which are constructs in arrowey
+model = tatsu.compile(ebnf, 'arrowey')
+# print(model.parse("""<do_smth> <arg> [out: a{"Hello World", 3•5:3, gu#".*", <arg>,}] → end: (do_smth: {<XD>=5,}){1} → "x"?3•3*NaN""")) #FIXME: Returns garbage parsetree, probably need to redefine what rules are subsyntaxes and which are constructs in arrowey
 #DEBUG:
-print('[i] To exit the input loop, type "end:0", without the quotes.\n[i] Note that this only generates ASTs and doesn\'t actually run the code.')
+print('[i] To exit the input loop, type "end:0", without the quotes.\n[i] Note that this only generates parsetrees and doesn\'t actually run the code.')
 while True: # Never do so outside of debugging!
-    inp = input('···arrowey···> ')
+    try:
+        inp = input('···arrowey···> ')
+    except EOFError:
+        inp = 'end:0'
     if inp!='end:0':
-        AST = model.parse(inp)
-        if AST!=([],[],[],[]):
-            print('→ AST =', AST)
+        parsetree = model.parse(inp)
+        if parsetree!=([], [], [], []):
+            print('→ parsetree =', parsetree)
         else:
             print('[-] Syntax error or empty input!')
     else:
