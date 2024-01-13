@@ -7,14 +7,14 @@ Scope                       = "[" Program "]" ; (* enclosing a set of instructio
 Error_catching_scope        = "@" Scope "_" Scope [ "_" Scope ] (* Any variables defined inside the first or second scope will be available in all subsequent scopes inside the Error_catching_scope, except <err>, which is always defined in the second and third scope and contains either the error that occurred in the first scope or <>, overriding the <err> variable if defined in the first or second scope. *) ;
 Escape_sequence             = "\\" ( '"' | "'" | "\\" | expression_separator ) ;
 unicode_character           = ( "\\x" hex_digit hex_digit ) | ( "\\u" hex_digit hex_digit hex_digit hex_digit ) ;
-Expression                  = ( String | Regex | Number | Arithmetic_expression | arraylike_access | Array | Object | object_property_refernece | Inline_if | Inversion | Logic_operation | Assignment | Comparison | function_definition | function_call | variable_reference | Scope | Error_catching_scope | ( "(" ZERO_TO_INFINITE_SPACE [ Expression ] ZERO_TO_INFINITE_SPACE ")" ) ) ; (* Can be nested. *)
+Expression                  = ( String | Regex | Number | Arithmetic_expression | Array | Object | object_property_refernece | Inline_if | Inversion | Logic_operation | Assignment | Comparison | function_definition | function_call | variable_reference | Scope | Error_catching_scope | ( "(" ZERO_TO_INFINITE_SPACE [ Expression ] ZERO_TO_INFINITE_SPACE ")" ) ) ; (* Can be nested. *)
 Assignment                  = [ "(" type_assignment ")" ] ( variable_reference | object_property_refernece ) equal_sign Expression ;
 type_assignment             = ZERO_TO_INFINITE_SPACE Identifier { ";;" Identifier } [ "{" type_assignment [ ":" type_assignment ] "}" ] { ZERO_TO_INFINITE_SPACE "," ZERO_TO_INFINITE_SPACE Identifier [ "{" type_assignment [ ":" type_assignment ] "}" ] } ZERO_TO_INFINITE_SPACE ;
 function_call               = ( Identifier | Expression ) ":" { ZERO_TO_INFINITE_SPACE [ flagless_variable_refernece equal_sign ] Expression } ;
 function_definition         = variable_reference AT_LEAST_ONE_SPACE ( flagless_variable_refernece [ equal_sign Expression ] ) { AT_LEAST_ONE_SPACE ( flagless_variable_refernece [ equal_sign Expression ] ) } AT_LEAST_ONE_SPACE Scope ;
 expression_separator        = ( ZERO_TO_INFINITE_SPACE "←" ZERO_TO_INFINITE_SPACE ) | ( ZERO_TO_INFINITE_SPACE "↑" ZERO_TO_INFINITE_SPACE ) | ( ZERO_TO_INFINITE_SPACE "↓" ZERO_TO_INFINITE_SPACE ) | ( ZERO_TO_INFINITE_SPACE "→" ZERO_TO_INFINITE_SPACE ) ;
 variable_reference          = [ "g" ] [ "c" | "i" | "d" ] flagless_variable_refernece ;
-object_property_refernece   = Expression ";;" ( flagless_variable_refernece | function_call ) ;
+object_property_refernece   = Expression ";;" ( flagless_variable_refernece | Integer_number | function_call ) ;
 flagless_variable_refernece = "<" [ ( "0" | "1" | Identifier ) ] ">" ;
 Identifier                  = ( letter | "_" ) { ( letter | digit | "_" ) } ;
 String                      = ( '"' { CHARACTER | "'" } '"' ) | ( "'" { CHARACTER | '"' } "'" ) ; (* To print out the character used to create the string, use the escape sequence `\ssqu;` for single quote and `\sdqu;` for a double quote. Arrows (that are also separators) in strings can be produced with `\saru;` (↑), `\sard;` (↓), `\sarl;` (←) and `\sarr;` (→). To literally write such an escape sequence, just prefix it with an even amount of backslashes. Escape sequences such as `\n` for newline (UNIX style) and `\r` for carriage return are also valid. `\s[…];` stands for "special character" and is the only escape sequence that has to be terminated with a semicolon. *)
@@ -22,7 +22,6 @@ Regex                       = { "g" | "i" | "m" | "s" | "u" | "y" } "#" String ;
 CHARACTER                   = /[^"']/ ;
 Object                      = "{" { ( String | variable_reference ) equal_sign Expression "," ZERO_TO_INFINITE_SPACE } "}" ; (* Maybe fix it up to not require a comma after each property *)
 Array                       = [ "c" ] "a" "{" { Expression "," ZERO_TO_INFINITE_SPACE } "}" ;
-arraylike_access            = Expression "{" ( Integer_number | variable_reference ) [ "_" ( Integer_number | variable_reference ) [ "_" ( Integer_number | variable_reference ) ] ] "}" ; (* indices are built like this (see square braces as "make optional"): `{startindex[_endindex[_steplength]]}` *)
 Inline_if                   = ( ( "(" ZERO_TO_INFINITE_SPACE [ Expression ] ZERO_TO_INFINITE_SPACE ")" ) | Expression ) ZERO_TO_INFINITE_SPACE "?" ZERO_TO_INFINITE_SPACE Expression ZERO_TO_INFINITE_SPACE "*" ZERO_TO_INFINITE_SPACE Expression ;
 Number                      = Integer_number | Float_number ;
 letter                      = lowercase_letter | uppercase_letter ;
@@ -62,13 +61,12 @@ while True: # Never do so outside of debugging!
     try:
         inp = input('···arrowey···> ')
     except EOFError:
-        inp = 'end:0'
-    if inp!='end:0':
-        parsetree = model.parse(inp)
-        if parsetree!=([], [], [], []):
-            print('→ parsetree =', parsetree)
-        else:
-            print('[-] Syntax error or empty input!')
-    else:
+        inp='end:0'
+    if inp=='end:0':
         print('[i] arrowey stopped')
         break
+    parsetree = model.parse(inp)
+    if parsetree!=([], [], [], []):
+        print('→ parsetree =', parsetree)
+    else:
+        print('[-] Syntax error or empty input!')
