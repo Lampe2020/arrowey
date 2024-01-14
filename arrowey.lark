@@ -20,9 +20,9 @@ IDENTIFIER:                     ( LETTER | "_" )+
 STRING:                         ( "\"" ( CHARACTER | "'" )* "\"" ) | ( "'" ( CHARACTER | "\"" )* "'" ) // To print out the character used to create the string, use the escape sequence `\ssqu;` for single quote and `\sdqu;` for a double quote. Arrows (that are also separators) in strings can be produced with `\saru;` (↑), `\sard;` (↓), `\sarl;` (←) and `\sarr;` (→). To literally write such an escape sequence, just prefix it with an even amount of backslashes. Escape sequences such as `\n` for newline (UNIX style) and `\r` for carriage return are also valid. `\s[…];` stands for "special character" and is the only escape sequence that has to be terminated with a semicolon. *)
 REGEX:                          ( "g" | "i" | "m" | "s" | "u" | "y" )* "#" STRING // Flags: global, case insensitive, multiline, dotall, unicode, sticky. *)
 CHARACTER:                      /[^"']/ // Everything that's not ' or "
-object:                         "c"? "{" _separated{obj_literal_prop_def, _opt_spacepadded{","}}? "}"
-obj_literal_prop_def:           (STRING | flagless_variable_reference | IDENTIFIER | POSITIVE_INTEGER) _opt_spacepadded{","} expression
-array:                          "c"? "a{" _separated{expression, _opt_spacepadded{","}}? "}"
+object:                         "c"? "{" ( _separated{obj_literal_prop_def, _opt_spacepadded{","}} | ","* )? "}"
+obj_literal_prop_def:           (STRING | flagless_variable_reference | IDENTIFIER | POSITIVE_INTEGER) _opt_spacepadded{"="} expression
+array:                          "c"? "a{" ( _separated{expression, _opt_spacepadded{","}} | ","* )? "}"
 inline_if:                      zero_to_infinite_space ( ( "(" zero_to_infinite_space [ expression ] zero_to_infinite_space ")" ) | expression ) zero_to_infinite_space "?" zero_to_infinite_space expression zero_to_infinite_space "*" zero_to_infinite_space expression zero_to_infinite_space
 NUMBER:                         INTEGER_NUMBER | FLOAT_NUMBER
 LETTER:                         LOWERCASE_LETTER | UPPERCASE_LETTER
