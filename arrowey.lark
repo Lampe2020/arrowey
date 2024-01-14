@@ -1,9 +1,8 @@
-start:                          program // LARK complains about not starting with the "start" rule…
 _separated{x, sep}:             sep* x ( sep+ x )* sep* // Allow for easy separation of anything
 _opt_spacepadded{x}:            zero_to_infinite_space x zero_to_infinite_space
 _spacepadded{x}:                at_least_one_space x at_least_one_space
-program:                        zero_to_infinite_space expression_separator* [ expression | scope ] ( expression_separator+ [ expression | scope ] )* zero_to_infinite_space // Note: the script itself has to end in an `end: ` statement with one argument which can be <> <0> <1> or any integer NUMBER. If it doesn't it will run into the next wall and crash that way. *)
-scope:                          "[" program "]" // enclosing a set of instructions in squared braces sets it into an own scope *)
+start:                          zero_to_infinite_space expression_separator* [ expression | scope ] ( expression_separator+ [ expression | scope ] )* zero_to_infinite_space // Note: the script itself has to end in an `end: ` statement with one argument which can be <> <0> <1> or any integer NUMBER. If it doesn't it will run into the next wall and crash that way. *)
+scope:                          "[" zero_to_infinite_space expression_separator* [ expression | scope ] ( expression_separator+ [ expression | scope ] )* zero_to_infinite_space "]" // enclosing a set of instructions in squared braces sets it into an own scope *)
 error_catching_scope:           "@" scope "_" scope [ "_" scope ] // Any variables defined inside the first or second scope will be available in all subsequent scopes inside the error_catching_scope, except <err>, which is always defined in the second and third scope and contains either the error that occurred in the first scope or <>, overriding the <err> variable if defined in the first or second scope. *)
 escape_sequence:                "\\" ( "\"" | "'" | "\\" | expression_separator )
 unicode_character:              ( "\\x" hex_digit hex_digit ) | ( "\\u" hex_digit hex_digit hex_digit hex_digit )
