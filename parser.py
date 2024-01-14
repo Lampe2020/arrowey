@@ -5,14 +5,15 @@ arr_version = '0.1.0'
 with open('arrowey.lark','r') as larkfile:
     parser = lark.Lark(larkfile.read())
 
-def printlog(mood:int=0,msg:str|tuple[str,...]|list[str]='')->None:
+def printlog(mood:int=0,msg:str|tuple[str,...]|list[str]|set[str]='')->None:
     """
     Print one or more log message(s) with associated status.
     """
     if type(msg)==str:
         msg = (msg,)
-    elif type(msg) not in (tuple,list):
+    elif type(msg) not in (tuple,list,set):
         printlog(-1, (f'printlog(): message list has wrong type: {repr(type(msg).__name__)}',))
+        msg = repr(msg)
     match mood:
         # msym: Mood SYMbol
         case -1:
