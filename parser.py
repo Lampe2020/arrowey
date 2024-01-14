@@ -13,17 +13,21 @@ def printlog(mood:int=0,msg:str|tuple[str,...]|list[str]|set[str]='')->None:
         msg = (msg,)
     elif type(msg) not in (tuple,list,set):
         printlog(-1, (f'printlog(): message list has wrong type: {repr(type(msg).__name__)}',))
-        msg = repr(msg)
+        msg = (repr(msg),)
     match mood:
         # msym: Mood SYMbol
+        case -3:
+            msym:str = '!' # fatal error
+        case -2:
+            msym:str = '-' # error
         case -1:
-            msym:str = '-'
+            msym:str = 'w' # warning
         case 0:
-            msym:str = 'i'
+            msym:str = 'i' # info
         case 1:
-            msym:str = '+'
+            msym:str = '+' # success
         case _:
-            msym:str = '?'
+            msym:str = '?' # unknown
     for message in msg:
         print(f'[{msym}] {message}')
 
@@ -36,6 +40,11 @@ while True:
         inp = input('arrowey>>> ')
     except EOFError:
         inp = 'end:0'
+    except Exception as err:
+        from traceback import format_exception
+        nl:str='\n'
+        printlog(-3, f'Error while reading stdin!\n{nl.join(format_exception(err))}')
+        inp = 'end:0'
     if inp == 'end:0':
         printlog(0,'arrowey stopped')
         break
@@ -44,6 +53,6 @@ while True:
             AST = parser.parse(inp)
         except Exception as err:
             AST = None
-            printlog(-1,f'Parser error!\n→ {type(err).__name__}: {err}')
+            printlog(-2,f'Parser error!\n→ {type(err).__name__}: {err}')
             continue
         printlog(1,f'AST successfully generated:\n{AST.pretty()}')
