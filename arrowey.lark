@@ -12,8 +12,8 @@ unicode_character:              ( "\\x" HEX_DIGIT HEX_DIGIT ) | ( "\\u" HEX_DIGI
 expression:                     ( format_string | STRING | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | unary_negative_expression | unary_positive_expression | ( "(" zero_to_infinite_space expression? zero_to_infinite_space ")" ) ) // Can be nested.
 assignment:                     type_assignment? ( variable_reference | object_property_reference ) _opt_spacepadded{EQUAL_SIGN} expression
 type_assignment:                "(" ( _sep{IDENTIFIER, ";;"} ) type_assignment? ")"
-function_call:                  ( ( ( object_property_reference ";;" )? IDENTIFIER) | expression ) ":" ( zero_to_infinite_space [ FLAGLESS_VARIABLE_REFERENCE EQUAL_SIGN ] expression )*
-function_definition:            variable_reference ( at_least_one_space ( FLAGLESS_VARIABLE_REFERENCE [ EQUAL_SIGN expression ] ) )* at_least_one_space scope
+function_call:                  ( ( ( object_property_reference ";;" )? IDENTIFIER) | expression ) ":" ( zero_to_infinite_space [ ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression )*
+function_definition:            variable_reference ( at_least_one_space ( type_assignment? ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] ) )* at_least_one_space scope
 expression_separator:           _opt_spacepadded{"←"} | _opt_spacepadded{"↓"} | _opt_spacepadded{"↑"} | _opt_spacepadded{"→"}
 variable_reference:             type_assignment? [ "g" | "p" ] [ "c" | "i" | "d" ] FLAGLESS_VARIABLE_REFERENCE // Flag meanings: g:global; p:private; c:constant; i:import; d:deletion
 object_property_reference:      expression ( ";;" ( FLAGLESS_VARIABLE_REFERENCE | POSITIVE_INTEGER ) )*
