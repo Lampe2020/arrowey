@@ -27,7 +27,7 @@ CLASS_EXTENDS_DEF:              "e{" IDENTIFIER "}" " "*
 obj_literal_prop_def:           (STRING | flagless_variable_reference | IDENTIFIER | POSITIVE_INTEGER) _opt_spacepadded{"="} expression
 array:                          "c"? "a{" ( _separated{expression, _opt_spacepadded{","}} | ","* )? "}"
 dynamic_obj_prop_access:        expression "{" ( expression | "*" ) "}" // <something_new> = <something_old>{*} clones <something_old>'s contents to <something_new>
-inline_if:                      zero_to_infinite_space ( ( "(" zero_to_infinite_space [ expression ] zero_to_infinite_space ")" ) | expression ) zero_to_infinite_space "?" zero_to_infinite_space expression zero_to_infinite_space "*" zero_to_infinite_space expression zero_to_infinite_space
+inline_if:                      _opt_spacepadded{expression} "?" _opt_spacepadded{expression} "*" _opt_spacepadded{expression} // Also called "ternary"
 NUMBER:                         INTEGER_NUMBER | FLOAT_NUMBER
 LETTER:                         LOWERCASE_LETTER | UPPERCASE_LETTER
 LOWERCASE_LETTER:               /[a-z]/
