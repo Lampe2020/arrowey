@@ -1,30 +1,30 @@
 _separated{x, sep}:             sep* x ( sep+ x )* sep* // Allow for easy separation of anything
 _opt_spacepadded{x}:            zero_to_infinite_space x zero_to_infinite_space
 _spacepadded{x}:                at_least_one_space x at_least_one_space
-start:                          _separated{expression, _opt_spacepadded{expression_separator}}? // Note: the script itself has to end in an `end: ` statement with one argument which can be <> <0> <1> or any integer NUMBER. If it doesn't it will run into the next wall and crash that way. *)
-scope:                          "[" _separated{expression, _opt_spacepadded{expression_separator}}? "]" // enclosing a set of instructions in squared braces sets it into an own scope *)
-error_catching_scope:           "@" scope "_" scope [ "_" scope ] // Any variables defined inside the first or second scope will be available in all subsequent scopes inside the error_catching_scope, except <err>, which is always defined in the second and third scope and contains either the error that occurred in the first scope or <>, overriding the <err> variable if defined in the first or second scope. *)
+start:                          _separated{expression, _opt_spacepadded{expression_separator}}? // Note: the script itself has to end in an `end: ` statement with one argument which can be <> <0> <1> or any integer NUMBER. If it doesn't it will run into the next wall and crash that way.
+scope:                          "[" _separated{expression, _opt_spacepadded{expression_separator}}? "]" // enclosing a set of instructions in squared braces sets it into an own scope
+error_catching_scope:           "@" scope "_" scope [ "_" scope ] // Any variables defined inside the first or second scope will be available in all subsequent scopes inside the error_catching_scope, except <err>, which is always defined in the second and third scope and contains either the error that occurred in the first scope or <>, overriding the <err> variable if defined in the first or second scope. Any variables defined inside any of the sub scopes in the error_catching_scope are backwards-inherited to the scope containing the error_catching_scope, allowing for trying to import a module and if that fails, importing another or setting an alternative value to the same variable name. 
 looping_scope:                  "&" expression scope
 escape_sequence:                "\\" ( "\"" | "'" | "\\" | expression_separator )
 unicode_character:              ( "\\x" hex_digit hex_digit ) | ( "\\u" hex_digit hex_digit hex_digit hex_digit )
-expression:                     ( STRING | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | looping_scope | ( "(" zero_to_infinite_space expression? zero_to_infinite_space ")" ) ) // Can be nested. *)
+expression:                     ( STRING | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | looping_scope | ( "(" zero_to_infinite_space expression? zero_to_infinite_space ")" ) ) // Can be nested.
 assignment:                     [ "(" type_assignment ")" ] ( variable_reference | object_property_reference ) EQUAL_SIGN expression
 type_assignment:                zero_to_infinite_space IDENTIFIER ( ";;" IDENTIFIER )* [ "{" type_assignment [ ":" type_assignment ] "}" ] ( zero_to_infinite_space "," zero_to_infinite_space IDENTIFIER [ "{" type_assignment [ ":" type_assignment ] "}" ] )* zero_to_infinite_space
-function_call:                  ( IDENTIFIER | expression ) ":" ( zero_to_infinite_space [ flagless_variable_reference EQUAL_SIGN ] expression )*
-function_definition:            variable_reference ( at_least_one_space ( flagless_variable_reference [ EQUAL_SIGN expression ] ) )* at_least_one_space scope
+function_call:                  ( ( ( object_property_reference ";;" )? IDENTIFIER) | expression ) ":" ( zero_to_infinite_space [ FLAGLESS_VARIABLE_REFERENCE EQUAL_SIGN ] expression )*
+function_definition:            variable_reference ( at_least_one_space ( FLAGLESS_VARIABLE_REFERENCE [ EQUAL_SIGN expression ] ) )* at_least_one_space scope
 expression_separator:           ( zero_to_infinite_space "←" zero_to_infinite_space ) | ( zero_to_infinite_space "↑" zero_to_infinite_space ) | ( zero_to_infinite_space "↓" zero_to_infinite_space ) | ( zero_to_infinite_space "→" zero_to_infinite_space )
-variable_reference:             [ "g" | "p" ] [ "c" | "i" | "d" ] flagless_variable_reference // Flag meanings: g:global; p:private; c:constant; i:import; d:deletion
-object_property_reference:      expression ";;" ( flagless_variable_reference | POSITIVE_INTEGER | function_call )
-flagless_variable_reference:    "<" [ ( "0" | "1" | IDENTIFIER ) ] ">"
+variable_reference:             [ "g" | "p" ] [ "c" | "i" | "d" ] FLAGLESS_VARIABLE_REFERENCE // Flag meanings: g:global; p:private; c:constant; i:import; d:deletion
+object_property_reference:      expression ( ";;" ( FLAGLESS_VARIABLE_REFERENCE | POSITIVE_INTEGER ) )*
+FLAGLESS_VARIABLE_REFERENCE:    "<" [ ( "0" | "1" | IDENTIFIER ) ] ">"
 IDENTIFIER:                     ( LETTER | "_" )+
-STRING:                         ( "\"" ( CHARACTER | "'" )* "\"" ) | ( "'" ( CHARACTER | "\"" )* "'" ) // To print out the character used to create the string, use the escape sequence `\ssqu;` for single quote and `\sdqu;` for a double quote. Arrows (that are also separators) in strings can be produced with `\saru;` (↑), `\sard;` (↓), `\sarl;` (←) and `\sarr;` (→). To literally write such an escape sequence, just prefix it with an even amount of backslashes. Escape sequences such as `\n` for newline (UNIX style) and `\r` for carriage return are also valid. `\s[…];` stands for "special character" and is the only escape sequence that has to be terminated with a semicolon. *)
-REGEX:                          ( "g" | "i" | "m" | "s" | "u" | "y" )* "#" STRING // Flags: global, case insensitive, multiline, dotall, unicode, sticky. *)
+STRING:                         ( "\"" ( CHARACTER | "'" )* "\"" ) | ( "'" ( CHARACTER | "\"" )* "'" ) // To print out the character used to create the string, use the escape sequence `\ssqu;` for single quote and `\sdqu;` for a double quote. Arrows (that are also separators) in strings can be produced with `\saru;` (↑), `\sard;` (↓), `\sarl;` (←) and `\sarr;` (→). To literally write such an escape sequence, just prefix it with an even amount of backslashes. Escape sequences such as `\n` for newline (UNIX style) and `\r` for carriage return are also valid. `\s[…];` stands for "special character" and is the only escape sequence that has to be terminated with a semicolon.
+REGEX:                          ( "g" | "i" | "m" | "s" | "u" | "y" )* "#" STRING // Flags: global, case insensitive, multiline, dotall, unicode, sticky.
 CHARACTER:                      /[^"']/ // Everything that's not ' or "
 object:                         "c"? "{" ( _separated{obj_literal_prop_def, _opt_spacepadded{","}} | ","* )? "}"
 class_definition:               "c"? "o" CLASS_NAME_DEF? CLASS_EXTENDS_DEF? scope // A scope with "o" prefix is a nameless class or gets assigned the name of the variable it first lands in. If it has "o{some_name}" prefix it gets assigned that name no matter in what variable it lands. With the "e{some_name}" prefix it extends another class and has to call the "super:" constructor in its "constructor:" method.
 CLASS_NAME_DEF:                 "{" IDENTIFIER "}" " "*
 CLASS_EXTENDS_DEF:              "e{" IDENTIFIER "}" " "*
-obj_literal_prop_def:           (STRING | flagless_variable_reference | IDENTIFIER | POSITIVE_INTEGER) _opt_spacepadded{"="} expression
+obj_literal_prop_def:           (STRING | FLAGLESS_VARIABLE_REFERENCE | IDENTIFIER | POSITIVE_INTEGER) _opt_spacepadded{"="} expression
 array:                          "c"? "a{" ( _separated{expression, _opt_spacepadded{","}} | ","* )? "}"
 dynamic_obj_prop_access:        expression "{" ( expression | "*" ) "}" // <something_new> = <something_old>{*} clones <something_old>'s contents to <something_new>
 inline_if:                      _opt_spacepadded{expression} "?" _opt_spacepadded{expression} "*" _opt_spacepadded{expression} // Also called "ternary"
@@ -33,7 +33,7 @@ LETTER:                         LOWERCASE_LETTER | UPPERCASE_LETTER
 LOWERCASE_LETTER:               /[a-z]/
 UPPERCASE_LETTER:               /[A-Z]/
 comparison:                     expression zero_to_infinite_space comparison_operator zero_to_infinite_space expression
-comparison_operator:            ( "L" | "l" | "e" | "g" | "G" | "n" | "E" ) EQUAL_SIGN // less than, less than or equal, equal, greater than or equal, greater than, not equal, self-identical (two references to the same object) *)
+comparison_operator:            ( "L" | "l" | "e" | "g" | "G" | "n" | "E" ) EQUAL_SIGN // less than, less than or equal, equal, greater than or equal, greater than, not equal, self-identical (two references to the same object)
 hex_digit:                      DIGIT | "a" | "b" | "c" | "d" | "e" | "f"
 DIGIT:                          "0" | NONZERO_DIGIT
 INTEGER_NUMBER:                 [ NEGATION ] ( "0" | ( NONZERO_DIGIT POSITIVE_INTEGER* ) )
@@ -46,13 +46,13 @@ zero_to_infinite_space:         " "*
 NEGATION:                       "-" // FIXME: Find out why `--1` and `-(-1)` trigger error telling me no terminal matches "-"!
 EQUAL_SIGN:                     "="
 POWER_OPERATOR:                 "^"
-DOT_OPERATOR:                   "•" | ":" | "%" // times, divided by, modulo *)
-DASH_OPERATOR:                  "+" | NEGATION // plus, minus *)
+DOT_OPERATOR:                   "•" | ":" | "%" // times, divided by, modulo
+DASH_OPERATOR:                  "+" | NEGATION // plus, minus
 arithmatic_operator:            DOT_OPERATOR | DASH_OPERATOR
-POSITIVE_INTEGER:               "0" | ( NONZERO_DIGIT DIGIT* ) // zero or any whole NUMBER not starting with zero *)
+POSITIVE_INTEGER:               "0" | ( NONZERO_DIGIT DIGIT* ) // zero or any whole NUMBER not starting with zero
 logic_operation:                ( expression zero_to_infinite_space logic_operator zero_to_infinite_space expression )
-inversion:                      ( "n" ) "^" zero_to_infinite_space expression // Technically also a logic operation, I just count it as an own thing. *)
-logic_operator:                 ( "a" | "o" | "x" | "l" | "r" ) "^" // and, or, xor, lshift, rshift *)
+inversion:                      ( "n" ) "^" zero_to_infinite_space expression // Technically also a logic operation, I just count it as an own thing.
+logic_operator:                 ( "a" | "o" | "x" | "l" | "r" ) "^" // and, or, xor, lshift, rshift
 arithmetic_expression:          powerarithmetic_expression | dotarithmetic_expression | dasharithmetic_expression
 powerarithmetic_expression:     expression POWER_OPERATOR expression
 dotarithmetic_expression:       expression DOT_OPERATOR expression
