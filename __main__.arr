@@ -1,3 +1,4 @@
+#!/home/christian/arrowey/parser.py
 <name>=in:"Enter your name: "↓
 ↓                            ←
 →<hello_var>=f"Hello World,\nhello {<name>}"↓
