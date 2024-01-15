@@ -13,7 +13,7 @@ type_assignment:                zero_to_infinite_space IDENTIFIER ( ";;" IDENTIF
 function_call:                  ( IDENTIFIER | expression ) ":" ( zero_to_infinite_space [ flagless_variable_reference EQUAL_SIGN ] expression )*
 function_definition:            variable_reference ( at_least_one_space ( flagless_variable_reference [ EQUAL_SIGN expression ] ) )* at_least_one_space scope
 expression_separator:           ( zero_to_infinite_space "←" zero_to_infinite_space ) | ( zero_to_infinite_space "↑" zero_to_infinite_space ) | ( zero_to_infinite_space "↓" zero_to_infinite_space ) | ( zero_to_infinite_space "→" zero_to_infinite_space )
-variable_reference:             [ "g" ] [ "c" | "i" | "d" ] flagless_variable_reference
+variable_reference:             [ "g" | "p" ] [ "c" | "i" | "d" ] flagless_variable_reference // Flag meanings: g:global; p:private; c:constant; i:import; d:deletion
 object_property_reference:      expression ";;" ( flagless_variable_reference | POSITIVE_INTEGER | function_call )
 flagless_variable_reference:    "<" [ ( "0" | "1" | IDENTIFIER ) ] ">"
 IDENTIFIER:                     ( LETTER | "_" )+
