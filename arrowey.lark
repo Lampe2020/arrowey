@@ -1,12 +1,13 @@
 _separated{x, sep}:             sep* x ( sep+ x )* sep* // Allow for easy separation of anything
 _opt_spacepadded{x}:            zero_to_infinite_space x zero_to_infinite_space
 _spacepadded{x}:                at_least_one_space x at_least_one_space
-start:                          zero_to_infinite_space expression_separator* [ expression | scope ] ( expression_separator+ [ expression | scope ] )* zero_to_infinite_space // Note: the script itself has to end in an `end: ` statement with one argument which can be <> <0> <1> or any integer NUMBER. If it doesn't it will run into the next wall and crash that way. *)
-scope:                          "[" zero_to_infinite_space expression_separator* [ expression | scope ] ( expression_separator+ [ expression | scope ] )* zero_to_infinite_space "]" // enclosing a set of instructions in squared braces sets it into an own scope *)
+start:                          _separated{expression, _opt_spacepadded{expression_separator}}? // Note: the script itself has to end in an `end: ` statement with one argument which can be <> <0> <1> or any integer NUMBER. If it doesn't it will run into the next wall and crash that way. *)
+scope:                          "[" _separated{expression, _opt_spacepadded{expression_separator}}? "]" // enclosing a set of instructions in squared braces sets it into an own scope *)
 error_catching_scope:           "@" scope "_" scope [ "_" scope ] // Any variables defined inside the first or second scope will be available in all subsequent scopes inside the error_catching_scope, except <err>, which is always defined in the second and third scope and contains either the error that occurred in the first scope or <>, overriding the <err> variable if defined in the first or second scope. *)
+looping_scope:                  "&" expression scope
 escape_sequence:                "\\" ( "\"" | "'" | "\\" | expression_separator )
 unicode_character:              ( "\\x" hex_digit hex_digit ) | ( "\\u" hex_digit hex_digit hex_digit hex_digit )
-expression:                     ( STRING | REGEX | NUMBER | arithmetic_expression | array | object | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | ( "(" zero_to_infinite_space [ expression ] zero_to_infinite_space ")" ) ) // Can be nested. *)
+expression:                     ( STRING | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | looping_scope | ( "(" zero_to_infinite_space expression? zero_to_infinite_space ")" ) ) // Can be nested. *)
 assignment:                     [ "(" type_assignment ")" ] ( variable_reference | object_property_reference ) EQUAL_SIGN expression
 type_assignment:                zero_to_infinite_space IDENTIFIER ( ";;" IDENTIFIER )* [ "{" type_assignment [ ":" type_assignment ] "}" ] ( zero_to_infinite_space "," zero_to_infinite_space IDENTIFIER [ "{" type_assignment [ ":" type_assignment ] "}" ] )* zero_to_infinite_space
 function_call:                  ( IDENTIFIER | expression ) ":" ( zero_to_infinite_space [ flagless_variable_reference EQUAL_SIGN ] expression )*
@@ -20,8 +21,12 @@ STRING:                         ( "\"" ( CHARACTER | "'" )* "\"" ) | ( "'" ( CHA
 REGEX:                          ( "g" | "i" | "m" | "s" | "u" | "y" )* "#" STRING // Flags: global, case insensitive, multiline, dotall, unicode, sticky. *)
 CHARACTER:                      /[^"']/ // Everything that's not ' or "
 object:                         "c"? "{" ( _separated{obj_literal_prop_def, _opt_spacepadded{","}} | ","* )? "}"
+class_definition:               "c"? "o" CLASS_NAME_DEF? CLASS_EXTENDS_DEF? scope // A scope with "o" prefix is a nameless class or gets assigned the name of the variable it first lands in. If it has "o{some_name}" prefix it gets assigned that name no matter in what variable it lands. With the "e{some_name}" prefix it extends another class and has to call the "super:" constructor in its "constructor:" method.
+CLASS_NAME_DEF:                 "{" IDENTIFIER "}" " "*
+CLASS_EXTENDS_DEF:              "e{" IDENTIFIER "}" " "*
 obj_literal_prop_def:           (STRING | flagless_variable_reference | IDENTIFIER | POSITIVE_INTEGER) _opt_spacepadded{"="} expression
 array:                          "c"? "a{" ( _separated{expression, _opt_spacepadded{","}} | ","* )? "}"
+dynamic_obj_prop_access:        expression "{" ( expression | "*" ) "}" // <something_new> = <something_old>{*} clones <something_old>'s contents to <something_new>
 inline_if:                      zero_to_infinite_space ( ( "(" zero_to_infinite_space [ expression ] zero_to_infinite_space ")" ) | expression ) zero_to_infinite_space "?" zero_to_infinite_space expression zero_to_infinite_space "*" zero_to_infinite_space expression zero_to_infinite_space
 NUMBER:                         INTEGER_NUMBER | FLOAT_NUMBER
 LETTER:                         LOWERCASE_LETTER | UPPERCASE_LETTER
