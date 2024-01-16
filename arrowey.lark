@@ -1,7 +1,7 @@
 _sep{x, sep}:                   ( x ( sep x )* )? // Allow for easy separation of anything
 _separated{x, sep}:             sep* _sep{x, sep} sep* // Allow for easy separation of anything, including being padded with sep
-_opt_spacepadded{x}:            zero_to_infinite_space x zero_to_infinite_space
-_spacepadded{x}:                at_least_one_space x at_least_one_space
+_opt_spacepadded{x}:            opt_var_len_space x opt_var_len_space
+_spacepadded{x}:                VAR_LEN_SPACE x VAR_LEN_SPACE
 start:                          _separated{expression, _opt_spacepadded{expression_separator}}? // Note: the script itself has to end in an `end: ` statement with one argument which can be <> <0> <1> or any integer NUMBER. If it doesn't it will run into the next wall and crash that way.
 scope:                          "[" _separated{expression, _opt_spacepadded{expression_separator}}? "]" // enclosing a set of instructions in squared braces sets it into an own scope
 error_catching_scope:           "@" scope "_" scope [ "_" scope ] // Any variables defined inside the first or second scope will be available in all subsequent scopes inside the error_catching_scope, except <err>, which is always defined in the second and third scope and contains either the error that occurred in the first scope or <>, overriding the <err> variable if defined in the first or second scope. Any variables defined inside any of the sub scopes in the error_catching_scope are backwards-inherited to the scope containing the error_catching_scope, allowing for trying to import a module and if that fails, importing another or setting an alternative value to the same variable name.
@@ -9,13 +9,14 @@ conditional_scope:              "¤(" expression ")" scope ( "_(" expression ")"
 looping_scope:                  "&" expression scope
 escape_sequence:                "\\" ( "\"" | "'" | "\\" | expression_separator )
 unicode_character:              ( "\\x" HEX_DIGIT HEX_DIGIT ) | ( "\\u" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
-expression:                     ( format_string | STRING | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | unary_negative_expression | unary_positive_expression | ( "(" zero_to_infinite_space expression? zero_to_infinite_space ")" ) ) // Can be nested.
+expression:                     ( format_string | STRING | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | unary_negative_expression | unary_positive_expression | type_cast_expression | ( "(" opt_var_len_space expression? opt_var_len_space ")" ) ) // Can be nested.
+type_cast_expression:           type_assignment expression // Directly prepend any expression with a type assignment to convert its return value to the assigned type.
 assignment:                     type_assignment? ( variable_reference | object_property_reference ) _opt_spacepadded{EQUAL_SIGN} expression
 type_assignment:                "(" ( _sep{IDENTIFIER, ";;"} ) type_assignment? ")"
-function_call:                  ( ( ( object_property_reference ";;" )? IDENTIFIER) | expression ) ":" ( zero_to_infinite_space [ ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression )*
-function_definition:            variable_reference ( at_least_one_space ( type_assignment? ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] ) )* at_least_one_space scope
+function_call:                  ( ( ( object_property_reference ";;" )? IDENTIFIER) | expression ) ":" ( opt_var_len_space [ ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression )*
+function_definition:            variable_reference ( VAR_LEN_SPACE ( type_assignment? ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] ) )* VAR_LEN_SPACE scope
 expression_separator:           _opt_spacepadded{"←"} | _opt_spacepadded{"↓"} | _opt_spacepadded{"↑"} | _opt_spacepadded{"→"}
-variable_reference:             type_assignment? [ "g" | "p" ] [ "c" | "i" | "d" ] FLAGLESS_VARIABLE_REFERENCE // Flag meanings: g:global; p:private; c:constant; i:import; d:deletion
+variable_reference:             [ "g" | "p" ] [ "c" | "i" | "d" ] FLAGLESS_VARIABLE_REFERENCE // Flag meanings: g:global; p:private; c:constant; i:import; d:deletion
 object_property_reference:      expression ( ";;" ( FLAGLESS_VARIABLE_REFERENCE | POSITIVE_INTEGER ) )*
 FLAGLESS_VARIABLE_REFERENCE:    "<" [ ( "0" | "1" | IDENTIFIER ) ] ">"
 IDENTIFIER:                     ( LETTER | "_" )+
@@ -36,7 +37,7 @@ NUMBER:                         INTEGER_NUMBER | FLOAT_NUMBER
 LETTER:                         LOWERCASE_LETTER | UPPERCASE_LETTER
 LOWERCASE_LETTER:               "a".."z"
 UPPERCASE_LETTER:               "A".."Z"
-comparison:                     expression zero_to_infinite_space comparison_operator zero_to_infinite_space expression
+comparison:                     expression opt_var_len_space comparison_operator opt_var_len_space expression
 comparison_operator:            ( "L" | "l" | "e" | "g" | "G" | "n" | "E" ) EQUAL_SIGN // less than, less than or equal, equal, greater than or equal, greater than, not equal, self-identical (two references to the same object)
 HEX_DIGIT:                      DIGIT | "a"i | "b"i | "c"i | "d"i | "e"i | "f"i // LARK string with i behind closing quote: case-insensitive string
 DIGIT:                          "0" | NONZERO_DIGIT
@@ -45,8 +46,8 @@ hex_integer_number:             "0x" HEX_DIGIT+
 bin_integer_number:             "0b" ( "1" | "0" ) ( "1" | "0" )*
 FLOAT_NUMBER:                   ( INTEGER_NUMBER "." POSITIVE_INTEGER ) | "NaN"
 NONZERO_DIGIT:                  /[1-9]/
-at_least_one_space:             " "+
-zero_to_infinite_space:         " "*
+VAR_LEN_SPACE:                  " "+
+opt_var_len_space:              " "* // Not a terminal because apparently LARK doesn't like to have possibly empty terminals…
 NEGATION:                       "-"
 unary_positive_expression:      "+" expression // This is there to enable chaining of "+" operator but is executionally ignored
 unary_negative_expression:      "-" expression // This is there to enable chaining of "-" operator and is functionally the same as "expression•-1"
@@ -56,10 +57,10 @@ DOT_OPERATOR:                   "•" | ":" | "%" // times, divided by, modulo
 DASH_OPERATOR:                  "+" | NEGATION // plus, minus
 arithmatic_operator:            DOT_OPERATOR | DASH_OPERATOR
 POSITIVE_INTEGER:               "0" | ( NONZERO_DIGIT DIGIT* ) // zero or any whole NUMBER not starting with zero
-logic_operation:                ( expression zero_to_infinite_space logic_operator zero_to_infinite_space expression )
-inversion:                      ( "n" ) "^" zero_to_infinite_space expression // Technically also a logic operation, I just count it as an own thing.
+logic_operation:                ( expression _opt_spacepadded{logic_operator} expression )
+inversion:                      ( "n" ) "^" opt_var_len_space expression // Technically also a logic operation, I just count it as an own thing.
 logic_operator:                 ( "a" | "o" | "x" | "l" | "r" ) "^" // and, or, xor, lshift, rshift
 arithmetic_expression:          powerarithmetic_expression | dotarithmetic_expression | dasharithmetic_expression
-powerarithmetic_expression:     expression POWER_OPERATOR expression
-dotarithmetic_expression:       expression DOT_OPERATOR expression
-dasharithmetic_expression:      expression DASH_OPERATOR expression
+powerarithmetic_expression:     expression _opt_spacepadded{POWER_OPERATOR} expression
+dotarithmetic_expression:       expression _opt_spacepadded{DOT_OPERATOR} expression
+dasharithmetic_expression:      expression _opt_spacepadded{DASH_OPERATOR} expression
