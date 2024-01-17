@@ -44,9 +44,9 @@ comparison:                     expression _opt_spacepadded{COMPARISON_OPERATOR}
 COMPARISON_OPERATOR:            ( "L" | "l" | "e" | "g" | "G" | "n" | "E" ) EQUAL_SIGN // less than, less than or equal, equal, greater than or equal, greater than, not equal, self-identical (two references to the same object)
 HEX_DIGIT:                      DIGIT | "a"i | "b"i | "c"i | "d"i | "e"i | "f"i // LARK string with i behind closing quote: case-insensitive string
 DIGIT:                          "0" | NONZERO_DIGIT
-INTEGER_NUMBER:                 [ NEGATION ] ( "0" | ( NONZERO_DIGIT POSITIVE_INTEGER* ) )
-hex_integer_number:             "0x" HEX_DIGIT+
-bin_integer_number:             "0b" ( "1" | "0" ) ( "1" | "0" )*
+INTEGER_NUMBER:                 [ NEGATION ] ( ( "0" | ( NONZERO_DIGIT POSITIVE_INTEGER* ) | HEX_INTEGER_NUMBER | BIN_INTEGER_NUMBER ) )
+HEX_INTEGER_NUMBER:             "0x"i HEX_DIGIT+
+BIN_INTEGER_NUMBER:             "0b"i ( "1" | "0" ) ( "1" | "0" )*
 FLOAT_NUMBER:                   ( INTEGER_NUMBER "." POSITIVE_INTEGER ) | "NaN"
 NONZERO_DIGIT:                  /[1-9]/
 VAR_LEN_SPACE:                  " "+
