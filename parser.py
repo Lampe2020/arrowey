@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import lark
-arr_version = '0.1.1-prerelease+py3'
+arr_version = '0.1.1-pre-alpha+py3.10-plus'
 with open('arrowey.lark','r') as larkfile:
     parser = lark.Lark(larkfile.read())
 
