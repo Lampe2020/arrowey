@@ -1,8 +1,9 @@
+%ignore                         "\t"
 _sep{x, sep}:                   ( x ( sep x )* )? // Allow for easy separation of anything
 _separated{x, sep}:             sep* _sep{x, sep} sep* // Allow for easy separation of anything, including being padded with sep
 _opt_spacepadded{x}:            VAR_LEN_SPACE? x VAR_LEN_SPACE?
 _spacepadded{x}:                VAR_LEN_SPACE x VAR_LEN_SPACE
-start:                          _separated{expression, _opt_spacepadded{EXPRESSION_SEPARATOR}}? // Note: the script itself has to end in an `end: ` statement with one argument which can be <> <0> <1> or any integer NUMBER. If it doesn't it will run into the next wall and crash that way.
+start:                          _separated{expression, _opt_spacepadded{EXPRESSION_SEPARATOR}}?
 scope:                          "[" _separated{expression, _opt_spacepadded{EXPRESSION_SEPARATOR}}? "]" // enclosing a set of instructions in squared braces sets it into an own scope
 error_catching_scope:           "@" scope "_" scope [ "_" scope ] // Any variables defined inside the first or second scope will be available in all subsequent scopes inside the error_catching_scope, except <err>, which is always defined in the second and third scope and contains either the error that occurred in the first scope or <>, overriding the <err> variable if defined in the first or second scope. Any variables defined inside any of the sub scopes in the error_catching_scope are backwards-inherited to the scope containing the error_catching_scope, allowing for trying to import a module and if that fails, importing another or setting an alternative value to the same variable name.
 conditional_scope:              "¤(" expression ")" scope ( "_(" expression ")" scope )* ( "_" scope )? // Any variables defined in any of the sub scopes will be backwards-inherited to the parent scope.
@@ -17,7 +18,7 @@ function_call:                  ( ( ( object_property_reference ";;" )? IDENTIFI
 function_definition:            variable_reference ( VAR_LEN_SPACE? ( type_assignment? ( VAR_EXTRACT | VAR_KW_EXTRACT )? FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] ) )* VAR_LEN_SPACE? scope
 VAR_EXTRACT:                    "*"
 VAR_KW_EXTRACT:                 "**"
-EXPRESSION_SEPARATOR:           VAR_LEN_SPACE? ( "←" | "↓" | "↑" | "→" ) VAR_LEN_SPACE?
+EXPRESSION_SEPARATOR:           VAR_LEN_SPACE? ( "←" | "↓" | "↑" | "→" | "\n" ) VAR_LEN_SPACE? // Newline for arrowey-as-a-script (arraas)
 variable_reference:             [ "g" | "p" ] [ "c" | "i" | "d" ] FLAGLESS_VARIABLE_REFERENCE // Flag meanings: g:global; p:private; c:constant; i:import; d:deletion
 object_property_reference:      expression ( ";;" ( FLAGLESS_VARIABLE_REFERENCE | POSITIVE_INTEGER ) )*
 FLAGLESS_VARIABLE_REFERENCE:    "<" [ ( "0" | "1" | IDENTIFIER ) ] ">"
@@ -39,8 +40,8 @@ NUMBER:                         INTEGER_NUMBER | FLOAT_NUMBER
 LETTER:                         LOWERCASE_LETTER | UPPERCASE_LETTER
 LOWERCASE_LETTER:               "a".."z"
 UPPERCASE_LETTER:               "A".."Z"
-comparison:                     expression VAR_LEN_SPACE? comparison_operator VAR_LEN_SPACE? expression
-comparison_operator:            ( "L" | "l" | "e" | "g" | "G" | "n" | "E" ) EQUAL_SIGN // less than, less than or equal, equal, greater than or equal, greater than, not equal, self-identical (two references to the same object)
+comparison:                     expression _opt_spacepadded{COMPARISON_OPERATOR} expression
+COMPARISON_OPERATOR:            ( "L" | "l" | "e" | "g" | "G" | "n" | "E" ) EQUAL_SIGN // less than, less than or equal, equal, greater than or equal, greater than, not equal, self-identical (two references to the same object)
 HEX_DIGIT:                      DIGIT | "a"i | "b"i | "c"i | "d"i | "e"i | "f"i // LARK string with i behind closing quote: case-insensitive string
 DIGIT:                          "0" | NONZERO_DIGIT
 INTEGER_NUMBER:                 [ NEGATION ] ( "0" | ( NONZERO_DIGIT POSITIVE_INTEGER* ) )
