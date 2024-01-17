@@ -10,7 +10,7 @@ conditional_scope:              "¤(" expression ")" scope ( "_(" expression ")"
 looping_scope:                  "&" expression scope
 escape_sequence:                "\\" ( "\"" | "'" | "\\" | EXPRESSION_SEPARATOR )
 unicode_character:              ( "\\x" HEX_DIGIT HEX_DIGIT ) | ( "\\u" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
-expression:                     ( format_string | STRING | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | unary_negative_expression | unary_positive_expression | type_cast_expression | ( "(" VAR_LEN_SPACE? expression? VAR_LEN_SPACE? ")" ) ) // Can be nested.
+expression:                     ( format_string | STRING | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | type_cast_expression | ( "--" expression ) | unary_negative_expression | ( "+" expression ) | ( "(" VAR_LEN_SPACE? expression? VAR_LEN_SPACE? ")" ) ) // Can be nested.
 type_cast_expression:           type_assignment expression // Directly prepend any expression with a type assignment to convert its return value to the assigned type.
 assignment:                     type_assignment? ( variable_reference | object_property_reference ) _opt_spacepadded{EQUAL_SIGN} expression
 type_assignment:                "(" ( _sep{IDENTIFIER, ";;"} ) type_assignment? ")"
@@ -51,7 +51,6 @@ FLOAT_NUMBER:                   ( INTEGER_NUMBER "." POSITIVE_INTEGER ) | "NaN"
 NONZERO_DIGIT:                  /[1-9]/
 VAR_LEN_SPACE:                  " "+
 NEGATION:                       "-"
-unary_positive_expression:      "+" expression // This is there to enable chaining of "+" operator but is executionally ignored
 unary_negative_expression:      "-" expression // This is there to enable chaining of "-" operator and is functionally the same as "expression•-1"
 EQUAL_SIGN:                     "="
 POWER_OPERATOR:                 "^"
