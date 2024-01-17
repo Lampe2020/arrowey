@@ -26,10 +26,10 @@ parsedcode_1 = list("") # Make a list out of the code so every character can be 
 for line in arrcode.split("\n"):
     parsedcode_1.append(line.ljust(longest))
 
+#TODO: Reimplement everything below!
+
 newlinestring = '\n'
 print(f'parsedcode_1: {newlinestring.join(parsedcode_1)}') # debug
-
-# Loops and conditionals: maybe with if:(condition)→{code}[→{else-code}] and loops also like that (second part of conditional/loop optional)?
 
 def parsecode(code):
     """
