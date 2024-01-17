@@ -14,7 +14,9 @@ type_cast_expression:           type_assignment expression // Directly prepend a
 assignment:                     type_assignment? ( variable_reference | object_property_reference ) _opt_spacepadded{EQUAL_SIGN} expression
 type_assignment:                "(" ( _sep{IDENTIFIER, ";;"} ) type_assignment? ")"
 function_call:                  ( ( ( object_property_reference ";;" )? IDENTIFIER) | expression ) ":" ( VAR_LEN_SPACE? [ ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression )*
-function_definition:            variable_reference ( VAR_LEN_SPACE ( type_assignment? ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] ) )* VAR_LEN_SPACE scope
+function_definition:            variable_reference ( VAR_LEN_SPACE? ( type_assignment? ( VAR_EXTRACT | VAR_KW_EXTRACT )? FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] ) )* VAR_LEN_SPACE? scope
+VAR_EXTRACT:                    "*"
+VAR_KW_EXTRACT:                 "**"
 EXPRESSION_SEPARATOR:           VAR_LEN_SPACE? ( "←" | "↓" | "↑" | "→" ) VAR_LEN_SPACE?
 variable_reference:             [ "g" | "p" ] [ "c" | "i" | "d" ] FLAGLESS_VARIABLE_REFERENCE // Flag meanings: g:global; p:private; c:constant; i:import; d:deletion
 object_property_reference:      expression ( ";;" ( FLAGLESS_VARIABLE_REFERENCE | POSITIVE_INTEGER ) )*
@@ -24,7 +26,7 @@ ESCAPE_SEQUENCE.1:              "\\" ( "'" | "\"" | "n" | "r" | "d" | "\\" | "$"
 format_string:                  "`" ( ESCAPE_SEQUENCE | ( "$<(" expression ")>" ) | ( CHARACTER | "'" | "\"" ) )* "`"
 STRING:                         ( "\"" ( ESCAPE_SEQUENCE | CHARACTER | "'" | "`" )* "\"" ) | ( "'" ( ESCAPE_SEQUENCE | CHARACTER | "\"" | "`" )* "'" ) // To print out the character used to create the string, use the escape sequence `\ssqu;` for single quote and `\sdqu;` for a double quote. Arrows (that are also separators) in strings can be produced with `\saru;` (↑), `\sard;` (↓), `\sarl;` (←) and `\sarr;` (→). To literally write such an escape sequence, just prefix it with an even amount of backslashes. Escape sequences such as `\n` for newline (UNIX style) and `\r` for carriage return are also valid. `\s[…];` stands for "special character" and is the only escape sequence that has to be terminated with a semicolon.
 REGEX:                          ( "g" | "i" | "m" | "s" | "u" | "y" )* "#" STRING // Flags: global, case insensitive, multiline, dotall, unicode, sticky.
-CHARACTER:                      /[^"'`\\]/ // Everything that's not ", ', ` or \
+CHARACTER:                      /[^"'`\\]/ // Everything that's not a doublequote, singlequote, backtick or backslash
 object:                         "c"? "{" ( _separated{obj_literal_prop_def, _opt_spacepadded{","}} | ","* )? "}"
 class_definition:               "c"? "o" CLASS_NAME_DEF? CLASS_EXTENDS_DEF? scope // A scope with "o" prefix is a nameless class or gets assigned the name of the variable it first lands in. If it has "o{some_name}" prefix it automatically assigns itself to <some_name> and gets assigned that name no matter in what variable it lands. With the "e{some_name}" prefix it extends another class and has to call the "super:" constructor in its "constructor:" method.
 CLASS_NAME_DEF:                 "{" IDENTIFIER "}" VAR_LEN_SPACE?
