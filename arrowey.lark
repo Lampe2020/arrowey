@@ -1,4 +1,5 @@
 %ignore                         "\t"
+%ignore                         /\/\*.*\*\// // JS-like comments
 _sep{x, sep}:                   ( x ( sep x )* )? // Allow for easy separation of anything
 _separated{x, sep}:             sep* _sep{x, sep} sep* // Allow for easy separation of anything, including being padded with sep
 _opt_spacepadded{x}:            VAR_LEN_SPACE? x VAR_LEN_SPACE?
@@ -10,7 +11,7 @@ conditional_scope:              "¤(" expression ")" scope ( "_(" expression ")"
 looping_scope:                  "&" expression scope
 escape_sequence:                "\\" ( "\"" | "'" | "\\" | EXPRESSION_SEPARATOR )
 unicode_character:              ( "\\x" HEX_DIGIT HEX_DIGIT ) | ( "\\u" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
-expression:                     ( format_string | STRING | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | type_cast_expression | ( "--" expression ) | unary_negative_expression | ( "+" expression ) | ( "(" VAR_LEN_SPACE? expression? VAR_LEN_SPACE? ")" ) ) // Can be nested.
+expression:                     ( format_string | STRING | file_import | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | type_cast_expression | ( "--" expression ) | unary_negative_expression | ( "+" expression ) | ( "(" VAR_LEN_SPACE? expression? VAR_LEN_SPACE? ")" ) ) // Can be nested.
 type_cast_expression:           type_assignment expression // Directly prepend any expression with a type assignment to convert its return value to the assigned type.
 assignment:                     type_assignment? ( variable_reference | object_property_reference ) _opt_spacepadded{EQUAL_SIGN} expression
 type_assignment:                "(" ( _sep{IDENTIFIER, ";;"} ) type_assignment? ")"
@@ -19,7 +20,14 @@ function_definition:            variable_reference ( VAR_LEN_SPACE? ( type_assig
 VAR_EXTRACT:                    "*"
 VAR_KW_EXTRACT:                 "**"
 EXPRESSION_SEPARATOR:           VAR_LEN_SPACE? ( "←" | "↓" | "↑" | "→" | "\n" ) VAR_LEN_SPACE? // Newline for arrowey-as-a-script (arraas)
-variable_reference:             [ "g" | "p" ] [ "c" | "i" | "d" ] FLAGLESS_VARIABLE_REFERENCE // Flag meanings: g:global; p:private; c:constant; i:import; d:deletion
+file_import:                    VFLAG_IMPORT STRING // Import a file. You need to assign it to a variable manually.
+variable_reference:             [ VFLAG_GLOBAL | VFLAG_PRIVATE ] [ VFLAG_CONST | VFLAG_IMPORT | VFLAG_DELETION ] FLAGLESS_VARIABLE_REFERENCE
+//TODO: Find out if there's a way to get inline terminals' text to maybe remove the below definitions and inline them again!
+VFLAG_GLOBAL:                   "g"
+VFLAG_PRIVATE:                  "p"
+VFLAG_CONST:                    "c"
+VFLAG_IMPORT:                   "i"
+VFLAG_DELETION:                 "d"
 object_property_reference:      expression ( ";;" ( FLAGLESS_VARIABLE_REFERENCE | POSITIVE_INTEGER ) )*
 FLAGLESS_VARIABLE_REFERENCE:    "<" [ ( "0" | "1" | IDENTIFIER ) ] ">"
 IDENTIFIER:                     ( LETTER | "_" )+
