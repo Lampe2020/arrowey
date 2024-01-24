@@ -87,7 +87,15 @@ def linearize(code:tuple[str, ...]) -> str:
         except IndexError:
             return codeline # We his a border, meaning we must have hit the end.
 
-def parse(code:str):
+#TODO: Maybe implement parsers as classes, not as functions?
+
+def recursive_parse(code:str)->any:
+    """
+    Same as parse(), just using Python's stack to make our lives easier.
+    """
+    sys.setrecursionlimit(3_333) # Some high number to prevent arrowey from crashing too easily with recursion errors
+
+def iterative_parse(code:str)->any:
     """
     Parse the given line of code and return its return value
 
@@ -99,11 +107,27 @@ def parse(code:str):
     Rinse and repeat.
 
     ↑ Acceptable?
+
+    To visit node: add to to-parse list with its parent node ID as an attribute to tell the visitor what element to tell that its child has been visited.
+    If the node that gets updated then has no unvisited TERMINAL nodes left it is added to a runnable list (?) and if it has non-TERMINAL child nodes left it waits until they are marked runnable.
+
+    When we encounter a node we give it an ID and store it in the flat node buffer. We then iterate over that buffer and extract all child nodes and give them IDs as well as a property telling which node is their parent and adding the child's ID to a children property on the parent.
+    When all nodes have no nested children and every node except the `start` node (ID 0) has a parent ID associated with it we iterate over the buffer again and resolve all TERMINALs and store them into their parents.
+    When all TERMINALs are resolved we iterate over the buffer from the node 0 (`start`) and through its children etc. to implement the behaviour.
     """
 
     stack:list[lark.any] = []
 
     #TODO: Implement stack handling!
+
+def parse(code:str, iterative:bool=False)->any:
+    """
+    Parse the code with the selected parsing function, defaulting to recursive.
+    """
+    if iterative:
+        return iterative_parse(code)
+    else:
+        return recursive_parse(code)
 
 if __name__ == '__main__':
     # Do the interactive shells with the help of `readline` module? https://docs.python.org/3.10/library/readline.html#module-readline
