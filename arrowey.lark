@@ -15,7 +15,7 @@ expression:                     ( format_string | STRING | file_import | REGEX |
 type_cast_expression:           type_assignment expression // Directly prepend any expression with a type assignment to convert its return value to the assigned type.
 assignment:                     type_assignment? ( variable_reference | object_property_reference ) _opt_spacepadded{EQUAL_SIGN} expression
 type_assignment:                "(" ( _sep{IDENTIFIER, ";;"} ) type_assignment? ")"
-function_call:                  ( ( ( object_property_reference ";;" )? IDENTIFIER) | expression ) ":" ( VAR_LEN_SPACE? [ ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression )*
+function_call:                  ( ( ( expression ";;" )? IDENTIFIER) | expression ) ":" ( VAR_LEN_SPACE? [ ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression )*
 function_definition:            variable_reference ( VAR_LEN_SPACE? ( type_assignment? ( VAR_EXTRACT | VAR_KW_EXTRACT )? FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] ) )* VAR_LEN_SPACE? scope
 VAR_EXTRACT:                    "*"
 VAR_KW_EXTRACT:                 "**"
