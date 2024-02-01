@@ -67,7 +67,8 @@ def linearize(code:tuple[str, ...]) -> str:
     playhead_pos:tuple[int,int] = (0,0)
     codeline:str = ''
     lastdir:str = '→'
-    def move(pos:tuple[int,int], direction:str|Ellipsis=...):
+    ellipsis:type = type(...)
+    def move(pos:tuple[int,int], direction:str|ellipsis=...):
         directions = {'←':(0,-1), '↓':(1,0), '↑':(-1,0), '→':(0,1)} # Relative positions
         if direction in directions.keys():
             return (
@@ -79,9 +80,9 @@ def linearize(code:tuple[str, ...]) -> str:
             return pos
     while True: # Gets stopped by `return` statement
         try:
-            codeline += code[pos[0]][pos[1]]
+            codeline += code[playhead_pos[0]][playhead_pos[1]]
             move(playhead_pos, (
-                codeline[-1] if (code[pos[0]][pos[1]] in ('←', '↓', '↑', '→'))
+                codeline[-1] if (code[playhead_pos[0]][playhead_pos[1]] in ('←', '↓', '↑', '→'))
                 else lastdir
             ))
         except IndexError:
@@ -89,45 +90,11 @@ def linearize(code:tuple[str, ...]) -> str:
 
 #TODO: Maybe implement parsers as classes, not as functions?
 
-def recursive_parse(code:str)->any:
-    """
-    Same as parse(), just using Python's stack to make our lives easier.
-    """
-    sys.setrecursionlimit(3_333) # Some high number to prevent arrowey from crashing too easily with recursion errors
-
-def iterative_parse(code:str)->any:
-    """
-    Parse the given line of code and return its return value
-
-    Follow the parse tree:
-    Stack: uppermost node has highest list index
-    create a stack, when encountering a node push it onto there and call the stack visit function.
-    If stack visitor tells us the uppermost node can have children, go into the uppermost node and put its first child onto the stack,
-    if the stack visitor returns nothing, pop the uppermost node off the stack and call its visitor method, then push its next sibling onto the stack if it has such.
-    Rinse and repeat.
-
-    ↑ Acceptable?
-
-    To visit node: add to to-parse list with its parent node ID as an attribute to tell the visitor what element to tell that its child has been visited.
-    If the node that gets updated then has no unvisited TERMINAL nodes left it is added to a runnable list (?) and if it has non-TERMINAL child nodes left it waits until they are marked runnable.
-
-    When we encounter a node we give it an ID and store it in the flat node buffer. We then iterate over that buffer and extract all child nodes and give them IDs as well as a property telling which node is their parent and adding the child's ID to a children property on the parent.
-    When all nodes have no nested children and every node except the `start` node (ID 0) has a parent ID associated with it we iterate over the buffer again and resolve all TERMINALs and store them into their parents.
-    When all TERMINALs are resolved we iterate over the buffer from the node 0 (`start`) and through its children etc. to implement the behaviour.
-    """
-
-    stack:list[lark.any] = []
-
-    #TODO: Implement stack handling!
-
-def parse(code:str, iterative:bool=False)->any:
+def compile(code:str)->any:
     """
     Parse the code with the selected parsing function, defaulting to recursive.
     """
-    if iterative:
-        return iterative_parse(code)
-    else:
-        return recursive_parse(code)
+    parsetree = parser.parse(code)
 
 if __name__ == '__main__':
     # Do the interactive shells with the help of `readline` module? https://docs.python.org/3.10/library/readline.html#module-readline
@@ -137,12 +104,16 @@ if __name__ == '__main__':
             Usage:
             <no args>            
             --help|-h           Display this help and exit.
-            
+            --parseshell|-p     Open an interactive shell to show code parse trees. 
+                                Exit with "end:0" or by pressing [Ctrl]+[D]
+            --script|-s         Linearize the code like a script (line by line) instead of following the arrows.
             '''.replace('           ', '')) # Remove unecessary padding.
         sys.exit(0)
-    elif ((not (argument('--parse-only') or argument('-p'))) and len(sys.argv)==2) or len(sys.argv)==1:
+    elif ((not (argument('--parseshell') or argument('-p'))) and len(sys.argv)==2) or len(sys.argv)==1:
         file_is_script:bool = bool(argument('--script') or argument('-s'))
-        #TODO: Implement parser above and invoke it here
+        code:str = '' #TODO: get the code either from STDIN or from specified file
+        if not file_is_script:
+            compile(linearize(codegrid(code)))
     else:
         logmsg(0, (
             f'arrowey v{arr_version}',
@@ -164,7 +135,7 @@ if __name__ == '__main__':
                 sys.exit(0)
             if inp or codebuf:
                 try:
-                    AST = parser.parse(codebuf or inp)
+                    parsetree:lark.Tree[lark.Token] = parser.parse(codebuf or inp)
                 except lark.UnexpectedEOF as err:
                     codebuf = '\n'.join((codebuf, inp))
                     continue
@@ -173,9 +144,9 @@ if __name__ == '__main__':
                     codebuf = ''
                     logmsg(-2, f'Parser error!\n→ {type(err).__name__}: {err}')
                     continue
-                if any((argument(arg) for arg in ('-p','--parse-only'))):
-                    logmsg(1, f'AST successfully generated:\n{AST.pretty()}')
+                if any((argument(arg) for arg in ('-p','--parseshell'))):
+                    logmsg(1, f'AST successfully generated:\n{parsetree.pretty()}')
                 else:
-                    logmsg(1, f'Result:\n{run_from_AST(AST)}')
+                    logmsg(1, f'Result:\n{run_from_AST(parsetree)}')
                 codebuf = ''
 
