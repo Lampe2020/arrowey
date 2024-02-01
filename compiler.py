@@ -88,6 +88,32 @@ def linearize(code:tuple[str, ...]) -> str:
         except IndexError:
             return codeline # We his a border, meaning we must have hit the end.
 
+class ArroweyTransformer(lark.Transformer_NonRecursive):
+    """
+    Our Arrowey parsetree→AST transformer
+    """
+    def __init__(self):
+        """
+        Initialize the AST generator
+        """
+        super().__init__()
+    ##############################################
+    # Define the methods used to visit each node #
+    ##############################################
+
+    def start(self, item:lark.Token) -> nodes.Scope:
+        """
+        Visit the start node
+        """
+        #TODO: Implement this!
+        return nodes.Scope(item.line, item.column, item.value) #TODO: Find out if item.value is the way to go here!
+
+    def instruction(selfitem:lark.Token) -> nodes.Node: #TODO: Implement nodes.Instruction!
+        """
+        Visit the instruction node
+        """
+        return nodees.Node(item.line, item.column)
+
 def compile(code:str)->any:
     """
     Parse the code with the selected parsing function, defaulting to recursive.
