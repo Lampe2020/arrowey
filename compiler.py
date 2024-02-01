@@ -108,11 +108,14 @@ class ArroweyTransformer(lark.Transformer_NonRecursive):
         #TODO: Implement this!
         return nodes.Scope(item.line, item.column, item.value) #TODO: Find out if item.value is the way to go here!
 
-    def instruction(selfitem:lark.Token) -> nodes.Node: #TODO: Implement nodes.Instruction!
+    #TODO: Implement visiting method for each non-questionmarked node name from arrowey.lark!
+    # https://medium.com/@mbednarski/creating-a-parser-for-a-programming-language-xdlang-part-3-94997860087e#d67b
+
+    def scope(self, items:list[any]) -> nodes.Node:
         """
         Visit the instruction node
         """
-        return nodees.Node(item.line, item.column)
+        return nodes.ExprNode(item.line, item.column, )
 
 def compile(code:str)->any:
     """

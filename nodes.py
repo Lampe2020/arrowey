@@ -20,11 +20,12 @@ class ExprNode(Node):
     """
     Base node for all expressions in the AST.
     """
-    def __int__(self, line:int, column:int)->None:
+    def __int__(self, line:int, column:int, items:list[any])->None:
         """
         Initialize the expression node.
         """
         super().__init__(line, column)
+        this.items = list(items)
 
 class LiteralNode(ExprNode):
     """
@@ -52,6 +53,8 @@ class NumberLiteral(LiteralNode):
 ##################
 # The real nodes #
 ##################
+
+#TODO: Implement all names from arrowey.lark as visitor classes here
 
 class IntLiteral(NumberLiteral):
     """
