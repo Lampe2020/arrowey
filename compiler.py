@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Implement compiler using https://github.com/numba/llvmlite later on?
-import lark, sys, os
+import lark, sys, os, nodes
 arr_version = '0.1.1-pre-alpha+py3.10-plus'
 NaN:float = float('NaN')
 Infinity:float = float('Infinity')
@@ -88,15 +88,20 @@ def linearize(code:tuple[str, ...]) -> str:
         except IndexError:
             return codeline # We his a border, meaning we must have hit the end.
 
-#TODO: Maybe implement parsers as classes, not as functions?
-
 def compile(code:str)->any:
     """
     Parse the code with the selected parsing function, defaulting to recursive.
     """
     parsetree = parser.parse(code)
+    #TODO: Implement parser
 
 if __name__ == '__main__':
+    def run_from_parsetree(parsetree:lark.Tree[lark.Token])->any:
+        """
+        Run the given code by compiling it and running the result.
+        """
+        #TODO: Implement this!
+
     # Do the interactive shells with the help of `readline` module? https://docs.python.org/3.10/library/readline.html#module-readline
     if argument('--help') or argument('-h'):
         logmsg(0, f'''arrowey v{arr_version}
@@ -147,6 +152,6 @@ if __name__ == '__main__':
                 if any((argument(arg) for arg in ('-p','--parseshell'))):
                     logmsg(1, f'AST successfully generated:\n{parsetree.pretty()}')
                 else:
-                    logmsg(1, f'Result:\n{run_from_AST(parsetree)}')
+                    logmsg(1, f'Result:\n{run_from_parsetree(parsetree)}')
                 codebuf = ''
 
