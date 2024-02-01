@@ -11,23 +11,17 @@ conditional_scope:              "¤(" expression ")" scope ( "_(" expression ")"
 looping_scope:                  "&" expression scope
 escape_sequence:                "\\" ( "\"" | "'" | "\\" | EXPRESSION_SEPARATOR )
 unicode_character:              ( "\\x" HEX_DIGIT HEX_DIGIT ) | ( "\\u" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
-expression:                     ( format_string | STRING | file_import | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | type_cast_expression | ( "--" expression ) | unary_negative_expression | ( "+" expression ) | ( "(" VAR_LEN_SPACE? expression? VAR_LEN_SPACE? ")" ) ) // Can be nested.
+?expression:                     ( format_string | STRING | file_import | REGEX | NUMBER | arithmetic_expression | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | type_cast_expression | ( "--" expression ) | unary_negative_expression | ( "+" expression ) | ( "(" VAR_LEN_SPACE? expression? VAR_LEN_SPACE? ")" ) ) // Can be nested. QUestion mark infront of name definition means this gets inlined and not added as a seperate, redundant step into the parse tree.
 type_cast_expression:           type_assignment expression // Directly prepend any expression with a type assignment to convert its return value to the assigned type.
 assignment:                     type_assignment? ( variable_reference | object_property_reference ) _opt_spacepadded{EQUAL_SIGN} expression
 type_assignment:                "(" ( _sep{IDENTIFIER, ";;"} ) type_assignment? ")"
-function_call:                  ( ( ( expression ";;" )? IDENTIFIER) | expression ) ":" ( VAR_LEN_SPACE? [ ( "*" | "**" )? FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression )*
-function_definition:            variable_reference ( VAR_LEN_SPACE? ( type_assignment? ( VAR_EXTRACT | VAR_KW_EXTRACT )? FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] ) )* VAR_LEN_SPACE? scope
+function_call:                  ( ( [ expression ";;" ] IDENTIFIER) | expression ) ":" ( VAR_LEN_SPACE? [ [ "*" | "**" ] FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression )*
+function_definition:            variable_reference ( VAR_LEN_SPACE? ( type_assignment? [ VAR_EXTRACT | VAR_KW_EXTRACT ] FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] ) )* VAR_LEN_SPACE? scope
 VAR_EXTRACT:                    "*"
 VAR_KW_EXTRACT:                 "**"
 EXPRESSION_SEPARATOR:           VAR_LEN_SPACE? ( "←" | "↓" | "↑" | "→" ) VAR_LEN_SPACE?
-file_import:                    VFLAG_IMPORT STRING // Import a file. You need to assign it to a variable manually.
-variable_reference:             [ VFLAG_GLOBAL | VFLAG_PRIVATE ] [ VFLAG_CONST | VFLAG_IMPORT | VFLAG_DELETION ] FLAGLESS_VARIABLE_REFERENCE
-//TODO: Find out if there's a way to get inline terminals' text to maybe remove the below definitions and inline them again!
-VFLAG_GLOBAL:                   "g"
-VFLAG_PRIVATE:                  "p"
-VFLAG_CONST:                    "c"
-VFLAG_IMPORT:                   "i"
-VFLAG_DELETION:                 "d"
+file_import:                    "i" STRING // Import a file. You need to assign it to a variable manually.
+!variable_reference:            [ "g" | "p" ] [ "c" | "i" | "d" ] FLAGLESS_VARIABLE_REFERENCE // Exclamation mark infront of name definition: keep all tokens
 object_property_reference:      expression ( ";;" ( FLAGLESS_VARIABLE_REFERENCE | POSITIVE_INTEGER ) )*
 FLAGLESS_VARIABLE_REFERENCE:    "<" [ ( "0" | "1" | IDENTIFIER ) ] ">"
 IDENTIFIER:                     ( LETTER | "_" )+
@@ -36,7 +30,7 @@ format_string:                  "`" ( ESCAPE_SEQUENCE | ( "$<(" expression ")>" 
 STRING:                         ( "\"" ( ESCAPE_SEQUENCE | CHARACTER | "'" | "`" )* "\"" ) | ( "'" ( ESCAPE_SEQUENCE | CHARACTER | "\"" | "`" )* "'" ) // To print out the character used to create the string, use the escape sequence `\ssqu;` for single quote and `\sdqu;` for a double quote. Arrows (that are also separators) in strings can be produced with `\saru;` (↑), `\sard;` (↓), `\sarl;` (←) and `\sarr;` (→). To literally write such an escape sequence, just prefix it with an even amount of backslashes. Escape sequences such as `\n` for newline (UNIX style) and `\r` for carriage return are also valid. `\s[…];` stands for "special character" and is the only escape sequence that has to be terminated with a semicolon.
 REGEX:                          ( "g" | "i" | "m" | "s" | "u" | "y" )* "#" STRING // Flags: global, case insensitive, multiline, dotall, unicode, sticky.
 CHARACTER:                      /[^"'`\\]/ // Everything that's not a doublequote, singlequote, backtick or backslash
-object:                         "c"? "{" ( _separated{obj_literal_prop_def, _opt_spacepadded{","}} | ","* )? "}"
+object:                         "c"? "{" [ _separated{obj_literal_prop_def, _opt_spacepadded{","}} | ","* ] "}"
 class_definition:               "c"? "o" CLASS_NAME_DEF? CLASS_EXTENDS_DEF? scope // A scope with "o" prefix is a nameless class or gets assigned the name of the variable it first lands in. If it has "o{some_name}" prefix it automatically assigns itself to <some_name> and gets assigned that name no matter in what variable it lands. With the "e{some_name}" prefix it extends another class and has to call the "super:" constructor in its "constructor:" method.
 CLASS_NAME_DEF:                 "{" IDENTIFIER "}" VAR_LEN_SPACE?
 CLASS_EXTENDS_DEF:              "e{" IDENTIFIER "}" VAR_LEN_SPACE?
@@ -46,8 +40,8 @@ dynamic_obj_prop_access:        expression "{" ( expression | "*" ) "}" // <some
 inline_if:                      _opt_spacepadded{expression} "?" _opt_spacepadded{expression} "*" _opt_spacepadded{expression} // Also called "ternary"
 NUMBER:                         INTEGER_NUMBER | FLOAT_NUMBER
 LETTER:                         LOWERCASE_LETTER | UPPERCASE_LETTER
-LOWERCASE_LETTER:               "a".."z"
-UPPERCASE_LETTER:               "A".."Z"
+LOWERCASE_LETTER:               "a".."z" | "ä" | "æ" | "ö" | "ø" | "œ" | "å" | "ü"
+UPPERCASE_LETTER:               "A".."Z" | "Ä" | "Æ" | "Ö" | "Ø" | "Œ" | "Å" | "Ü"
 comparison:                     expression _opt_spacepadded{COMPARISON_OPERATOR} expression
 COMPARISON_OPERATOR:            ( "L" | "l" | "e" | "g" | "G" | "n" | "E" ) EQUAL_SIGN // less than, less than or equal, equal, greater than or equal, greater than, not equal, self-identical (two references to the same object)
 HEX_DIGIT:                      DIGIT | "a"i | "b"i | "c"i | "d"i | "e"i | "f"i // LARK string with i behind closing quote: case-insensitive string
@@ -71,7 +65,7 @@ POSITIVE_INTEGER:               "0" | ( NONZERO_DIGIT DIGIT* ) // zero or any wh
 logic_operation:                ( expression _opt_spacepadded{logic_operator} expression )
 inversion:                      ( "n" ) "^" VAR_LEN_SPACE? expression // Technically also a logic operation, I just count it as an own thing.
 logic_operator:                 ( "a" | "o" | "x" | "l" | "r" ) "^" // and, or, xor, lshift, rshift
-arithmetic_expression:          powerarithmetic_expression | dotarithmetic_expression | dasharithmetic_expression
+arithmetic_expression:          dasharithmetic_expression | dotarithmetic_expression | powerarithmetic_expression
 powerarithmetic_expression:     expression _opt_spacepadded{POWER_OPERATOR} expression
 dotarithmetic_expression:       expression _opt_spacepadded{DOT_OPERATOR} expression
 dasharithmetic_expression:      expression _opt_spacepadded{DASH_OPERATOR} expression
