@@ -63,7 +63,7 @@ POSITIVE_INTEGER:               "0" | ( NONZERO_DIGIT DIGIT* ) // zero or any wh
 logic_operation:                ( expression _opt_spacepadded{LOGIC_OPERATOR} expression ) | inversion
 inversion:                      ( "n" ) "^" VAR_LEN_SPACE? expression // Technically also a logic operation, I just count it as an own thing.
 LOGIC_OPERATOR:                 ( "a" | "o" | "x" | "l" | "r" ) "^" // and, or, xor, lshift, rshift
-arithmetic_expression:          dasharithmetic_expression | dotarithmetic_expression | powerarithmetic_expression
+?arithmetic_expression:         dasharithmetic_expression | dotarithmetic_expression | powerarithmetic_expression
 powerarithmetic_expression:     expression _opt_spacepadded{POWER_OPERATOR} expression
 dotarithmetic_expression:       expression _opt_spacepadded{DOT_OPERATOR} expression
 dasharithmetic_expression:      expression _opt_spacepadded{DASH_OPERATOR} expression
