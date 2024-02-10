@@ -4,9 +4,10 @@ _sep{x, sep}:                   ( x ( sep x )* )? // Allow for easy separation o
 _separated{x, sep}:             sep* _sep{x, sep} sep* // Allow for easy separation of anything, including being padded with sep
 _opt_spacepadded{x}:            VAR_LEN_SPACE? x VAR_LEN_SPACE?
 _spacepadded{x}:                VAR_LEN_SPACE x VAR_LEN_SPACE
-start:                          _separated{instruction, _opt_spacepadded{EXPRESSION_SEPARATOR}}?
+_expr_sep:                      ( "←" | "↓" | "↑" | "→" )
+start:                          _separated{instruction, _opt_spacepadded{_expr_sep}}?
 ?instruction:                   expression | keyword
-scope:                          "[" _separated{instruction, _opt_spacepadded{EXPRESSION_SEPARATOR}}? "]" // enclosing a set of instructions in squared braces sets it into an own scope
+scope:                          "[" _separated{instruction, _opt_spacepadded{_expr_sep}}? "]" // enclosing a set of instructions in squared braces sets it into an own scope
 error_catching_scope:           "@" scope "_" scope [ "_" scope ] // Any variables defined inside the first or second scope will be available in all subsequent scopes inside the error_catching_scope, except <err>, which is always defined in the second and third scope and contains either the error that occurred in the first scope or <>, overriding the <err> variable if defined in the first or second scope. Any variables defined inside any of the sub scopes in the error_catching_scope are backwards-inherited to the scope containing the error_catching_scope, allowing for trying to import a module and if that fails, importing another or setting an alternative value to the same variable name.
 conditional_scope:              "/(" expression ")" scope ( "_(" expression ")" scope )* ( "_" scope )? // Any variables defined in any of the sub scopes will be backwards-inherited to the parent scope.
 looping_scope:                  "&" expression scope
@@ -17,7 +18,6 @@ assignment:                     type_assignment? ( variable_reference | object_p
 type_assignment:                "(" ( _sep{IDENTIFIER, ";;"} ) type_assignment? ")"
 function_call:                  ( ( [ expression ";;" ] IDENTIFIER) | expression ) ":" ( VAR_LEN_SPACE? [ [ "*" | "**" ] FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression )*
 !function_definition:           type_assignment? variable_reference ( VAR_LEN_SPACE? ( type_assignment? [ "*" | "**" ] FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] ) )* VAR_LEN_SPACE? scope
-EXPRESSION_SEPARATOR:           VAR_LEN_SPACE? ( "←" | "↓" | "↑" | "→" ) VAR_LEN_SPACE?
 file_import:                    "i" ( STRING | format_string ) // Import a file. You need to assign it to a variable manually.
 !variable_reference:            [ "g" | "p" ] [ "c" | "i" | "d" ] FLAGLESS_VARIABLE_REFERENCE // Exclamation mark infront of name definition: keep all tokens
 object_property_reference:      expression ( ";;" ( FLAGLESS_VARIABLE_REFERENCE | POSITIVE_INTEGER ) )*
