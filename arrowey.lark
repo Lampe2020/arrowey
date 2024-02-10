@@ -1,5 +1,5 @@
 %ignore                         "\t" | "\n"
-%ignore                         /\/\*.*\*\// // JS-like comments
+%ignore                         /\/\*.*\*\//m // JS-like comments
 _sep{x, sep}:                   ( x ( sep x )* )? // Allow for easy separation of anything
 _separated{x, sep}:             sep* _sep{x, sep} sep* // Allow for easy separation of anything, including being padded with sep
 _opt_spacepadded{x}:            VAR_LEN_SPACE? x VAR_LEN_SPACE?
