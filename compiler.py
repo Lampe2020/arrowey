@@ -155,6 +155,12 @@ if __name__ == '__main__':
         ))
         codebuf:str = ''
         nl:str='\n'
+        ending_parse_trees:tuple[lark.Tree[lark.Token], ...] = tuple(parser.parse(endcode) for endcode in (
+            'end: 0',
+            '~ret 0',
+            '~ret',
+            '~end'
+        ))
         while True:
             try:
                 inp:str = input(f'arrowey {"..." if codebuf else ">>>"} ')
@@ -164,12 +170,12 @@ if __name__ == '__main__':
                 from traceback import format_exception
                 logmsg(-3, f'Error while reading stdin!\n{nl.join(format_exception(err))}')
                 inp:str = 'end:0'
-            if inp == 'end:0' and not codebuf:
-                logmsg(0, 'arrowey stopped')
-                sys.exit(0)
             if inp or codebuf:
                 try:
                     parsetree:lark.Tree[lark.Token] = parser.parse(codebuf or inp)
+                    if parsetree in ending_parse_trees:
+                        logmsg(0, 'arrowey stopped')
+                        sys.exit(0)
                 except lark.UnexpectedEOF as err:
                     codebuf = '\n'.join((codebuf, inp))
                     continue
@@ -179,7 +185,7 @@ if __name__ == '__main__':
                     logmsg(-2, f'Parser error!\n→ {type(err).__name__}: {err}')
                     continue
                 if any((argument(arg) for arg in ('-p','--parseshell'))):
-                    logmsg(1, f'AST successfully generated:\n{parsetree.pretty()}')
+                    logmsg(1, f'Parse tree successfully generated:\n{parsetree.pretty()}')
                 else:
                     logmsg(1, f'Result:\n{run_from_parsetree(parsetree)}')
                 codebuf = ''
