@@ -5,7 +5,7 @@ An easy, 2D esolang made from an almost-unreadable programming language, both im
 
 There isn't really a "spec", there's only this implementation of arrowey, the spec is in my head. 
 I'll write documentation later on, at first I want to get it into working shape 
-(i.e. at least most syntax implemented in the compiler and successful first run of a compiled binary).   
+(i.e. at least most syntax implemented in the parser and first run of a basic I/O and arithmetics program).   
 
    
 *NOTE: I'm very irregularly working on this project as I don't always have time for it because of school...*
