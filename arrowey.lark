@@ -15,7 +15,8 @@ unicode_character:              ( "\\x" HEX_DIGIT HEX_DIGIT ) | ( "\\u" HEX_DIGI
 ?expression:                    ( format_string | STRING | file_import | REGEX | NUMBER | vector | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | type_cast_expression | arithmetic_operation | ( "--" expression ) | unary_negative_expression | ( "+" expression ) | ( "(" _VAR_LEN_SPACE? expression? _VAR_LEN_SPACE? ")" ) ) // Can be nested. QUestion mark infront of name definition means this gets inlined and not added as a seperate, redundant step into the parse tree.
 type_cast_expression:           type_assignment expression // Directly prepend any expression with a type assignment to convert its return value to the assigned type.
 assignment:                     type_assignment? ( variable_reference | object_property_reference ) _opt_spacepadded{EQUAL_SIGN} expression
-type_assignment:                "(" ( _sep{IDENTIFIER, ";;"} ) type_assignment? ")"
+type_assignment:                "(" _sep{type_ident, "|"} ")"
+type_ident:                    _sep{IDENTIFIER, ";;"} [ "(" type_ident ")" ] // Note: because of this a type assignment always has a list of things in the parse tree, of which the last one is either None or another type assignment for e.g. int(8) or vec(3); every other element in that token list is an identifier for an object/a property of that object.
 function_call:                  ( ( [ expression ";;" ] IDENTIFIER) | expression ) ":" _opt_spacepadded{funccall_argument}*
 funccall_argument:              [ [ UNPACK_ARR | UNPACK_OBJ ] FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression
 function_definition:            type_assignment? variable_reference _opt_spacepadded{funcdef_argument}* scope
@@ -46,7 +47,7 @@ array:                          "c"? "a{" ( _separated{expression, _opt_spacepad
 dynamic_obj_prop_access:        expression "{" ( expression | "*" ) "}" // <something_new> = <something_old>{*} clones <something_old>'s contents to <something_new>
 inline_if:                      _opt_spacepadded{expression} "?" _opt_spacepadded{expression} "*" _opt_spacepadded{expression} // Also called "ternary"
 NUMBER:                         INTEGER_NUMBER | FLOAT_NUMBER
-vector:                         "(" _VAR_LEN_SPACE? NUMBER _opt_spacepadded{"|"} _sep{NUMBER, _opt_spacepadded{"|"}} ")"
+vector:                         "(" _VAR_LEN_SPACE? expression _opt_spacepadded{"|"} _sep{expression, _opt_spacepadded{"|"}} ")"
 LETTER:                         LOWERCASE_LETTER | UPPERCASE_LETTER
 LOWERCASE_LETTER:               "a".."z" | "ä" | "æ" | "ö" | "ø" | "œ" | "å" | "ü"
 UPPERCASE_LETTER:               "A".."Z" | "Ä" | "Æ" | "Ö" | "Ø" | "Œ" | "Å" | "Ü"
