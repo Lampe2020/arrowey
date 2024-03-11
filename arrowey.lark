@@ -1,6 +1,6 @@
 %ignore                         "\t" | "\n"
 %ignore                         /\/\*.*\*\//m // JS-like comments
-_sep{x, sep}:                   ( x ( sep x )* )? // Allow for easy separation of anything
+_sep{x, sep}:                   [ x ( sep x )* ] // Allow for easy separation of anything
 _separated{x, sep}:             sep* _sep{x, sep} sep* // Allow for easy separation of anything, including being padded with sep
 _opt_spacepadded{x}:            _VAR_LEN_SPACE? x _VAR_LEN_SPACE?
 _spacepadded{x}:                _VAR_LEN_SPACE x _VAR_LEN_SPACE
@@ -12,23 +12,26 @@ error_catching_scope:           "@" scope "_" scope [ "_" scope ] // Any variabl
 conditional_scope:              "/(" expression ")" scope ( "_(" expression ")" scope )* ( "_" scope )? // Any variables defined in any of the sub scopes will be backwards-inherited to the parent scope.
 looping_scope:                  "&(" expression ")" scope
 unicode_character:              ( "\\x" HEX_DIGIT HEX_DIGIT ) | ( "\\u" HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
-?expression:                    ( format_string | STRING | file_import | REGEX | NUMBER | vector | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | scope | error_catching_scope | conditional_scope | looping_scope | type_cast_expression | arithmetic_operation | ( "--" expression ) | unary_negative_expression | ( "+" expression ) | ( "(" _VAR_LEN_SPACE? expression? _VAR_LEN_SPACE? ")" ) ) // Can be nested. QUestion mark infront of name definition means this gets inlined and not added as a seperate, redundant step into the parse tree.
+?expression:                    ( format_string | STRING | file_import | REGEX | NUMBER | vector | array | class_definition | object | dynamic_obj_prop_access | object_property_reference | inline_if | inversion | logic_operation | assignment | comparison | function_definition | function_call | variable_reference | import | scope | error_catching_scope | conditional_scope | looping_scope | type_cast_expression | arithmetic_operation | ( "--" expression ) | unary_negative_expression | ( "+" expression ) | ( "(" _VAR_LEN_SPACE? expression? _VAR_LEN_SPACE? ")" ) ) // Can be nested. QUestion mark infront of name definition means this gets inlined and not added as a seperate, redundant step into the parse tree.
 type_cast_expression:           type_assignment expression // Directly prepend any expression with a type assignment to convert its return value to the assigned type.
 assignment:                     type_assignment? ( variable_reference | object_property_reference ) _opt_spacepadded{EQUAL_SIGN} expression
 type_assignment:                "(" _sep{type_ident, "|"} ")"
-type_ident:                    _sep{IDENTIFIER, ";;"} [ "(" type_ident ")" ] // Note: because of this a type assignment always has a list of things in the parse tree, of which the last one is either None or another type assignment for e.g. int(8) or vec(3); every other element in that token list is an identifier for an object/a property of that object.
+type_ident:                     _sep{IDENTIFIER, ";;"} [ "(" type_ident ")" ] // Note: because of this a type assignment always has a list of things in the parse tree, of which the last one is either None or another type assignment for e.g. int(8) or vec(3); every other element in that token list is an identifier for an object/a property of that object.
 function_call:                  ( ( [ expression ";;" ] IDENTIFIER) | expression ) ":" _opt_spacepadded{funccall_argument}*
 funccall_argument:              [ [ UNPACK_ARR | UNPACK_OBJ ] FLAGLESS_VARIABLE_REFERENCE _opt_spacepadded{EQUAL_SIGN} ] expression
 function_definition:            type_assignment? variable_reference _opt_spacepadded{funcdef_argument}* scope
 funcdef_argument:               ( type_assignment? [ UNPACK_ARR | UNPACK_OBJ ] FLAGLESS_VARIABLE_REFERENCE [ _opt_spacepadded{EQUAL_SIGN} expression ] )
 UNPACK_ARR:                     "*"
 UNPACK_OBJ:                     "**"
-file_import:                    VARFLAG_IMPORT ( STRING | format_string ) // Import a file. You need to assign it to a variable manually.
-variable_reference:             [ VAR_SCOPEFLAG_GLOBAL | VAR_SCOPEFLAG_PRIVATE ] [ VARFLAG_CONST | VARFLAG_IMPORT | VARFLAG_DELETE ] FLAGLESS_VARIABLE_REFERENCE
+import:                         IMPORT_FLAG "<" _opt_spacepadded{IMPORT_IDENT} ">" _import_choice
+_import_choice:                 "{" _opt_spacepadded{_sep{IDENTIFIER, _opt_spacepadded{";"}}} "}"
+IMPORT_IDENT:                   IDENTIFIER ( ";;" IDENTIFIER )* // Can't use templates here because it's a terminal
+file_import:                    IMPORT_FLAG ( STRING | format_string ) _import_choice? // Import a file. You need to assign it to a variable manually.
+IMPORT_FLAG:                    "i"
+variable_reference:             [ VAR_SCOPEFLAG_GLOBAL | VAR_SCOPEFLAG_PRIVATE ] [ VARFLAG_CONST | VARFLAG_DELETE ] FLAGLESS_VARIABLE_REFERENCE
 VAR_SCOPEFLAG_GLOBAL:           "g"
 VAR_SCOPEFLAG_PRIVATE:          "p"
 VARFLAG_CONST:                  "c"
-VARFLAG_IMPORT:                 "i"
 VARFLAG_DELETE:                 "d"
 object_property_reference:      expression ( ";;" ( FLAGLESS_VARIABLE_REFERENCE | POSITIVE_INTEGER ) )+
 FLAGLESS_VARIABLE_REFERENCE:    "<" [ ( "0" | "1" | IDENTIFIER ) ] ">"
