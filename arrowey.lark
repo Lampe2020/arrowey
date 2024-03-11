@@ -38,12 +38,12 @@ format_string:                  "`" ( ESCAPE_SEQUENCE | ( "$<(" expression ")>" 
 STRING:                         ( "\"" ( ESCAPE_SEQUENCE | CHARACTER | "'" | "`" )* "\"" ) | ( "'" ( ESCAPE_SEQUENCE | CHARACTER | "\"" | "`" )* "'" ) // To print out the character used to create the string, use the escape sequence `\ssqu;` for single quote and `\sdqu;` for a double quote. Arrows (that are also separators) in strings can be produced with `\saru;` (↑), `\sard;` (↓), `\sarl;` (←) and `\sarr;` (→). To literally write such an escape sequence, just prefix it with an even amount of backslashes. Escape sequences such as `\n` for newline (UNIX style) and `\r` for carriage return are also valid. `\s[…];` stands for "special character" and is the only escape sequence that has to be terminated with a semicolon.
 REGEX:                          ( "g" | "i" | "m" | "s" | "u" | "y" )* "#" STRING // Flags: global, case insensitive, multiline, dotall, unicode, sticky.
 CHARACTER:                      /[^"'`\\]/ // Everything that's not a doublequote, singlequote, backtick or backslash
-object:                         VARFLAG_CONST? "{" [ _separated{obj_literal_prop_def, _opt_spacepadded{","}} | ","* ] "}"
+object:                         VARFLAG_CONST? "{" [ _separated{obj_literal_prop_def, _opt_spacepadded{";"}} | ";"* ] "}"
 class_definition:               VARFLAG_CONST? "o" CLASS_NAME_DEF CLASS_EXTENDS_DEF? scope // A scope with "o{some_name}" prefix is a class that automatically assigns itself to <some_name>. If it also has the "e{some_name}" prefix it extends another class and has to call the "super:" constructor in its "constructor:" method.
 CLASS_NAME_DEF:                 "{" IDENTIFIER "}" _VAR_LEN_SPACE?
 CLASS_EXTENDS_DEF:              "e{" IDENTIFIER "}" _VAR_LEN_SPACE?
 obj_literal_prop_def:           (STRING | FLAGLESS_VARIABLE_REFERENCE | IDENTIFIER | POSITIVE_INTEGER) _opt_spacepadded{"="} expression
-array:                          "c"? "a{" ( _separated{expression, _opt_spacepadded{","}} | ","* )? "}"
+array:                          "c"? "a{" ( _separated{expression, _opt_spacepadded{";"}} | ";"* )? "}"
 dynamic_obj_prop_access:        expression "{" ( expression | "*" ) "}" // <something_new> = <something_old>{*} clones <something_old>'s contents to <something_new>
 inline_if:                      _opt_spacepadded{expression} "?" _opt_spacepadded{expression} "*" _opt_spacepadded{expression} // Also called "ternary"
 NUMBER:                         INTEGER_NUMBER | FLOAT_NUMBER
@@ -58,7 +58,7 @@ DIGIT:                          "0" | NONZERO_DIGIT
 INTEGER_NUMBER:                 [ NEGATION ] ( ( "0" | ( NONZERO_DIGIT POSITIVE_INTEGER* ) | HEX_INTEGER_NUMBER | BIN_INTEGER_NUMBER ) )
 HEX_INTEGER_NUMBER:             "0x"i HEX_DIGIT+
 BIN_INTEGER_NUMBER:             "0b"i ( "1" | "0" ) ( "1" | "0" )*
-FLOAT_NUMBER:                   ( NEGATION? POSITIVE_INTEGER? "." POSITIVE_INTEGER ) | NAN | INFINITY
+FLOAT_NUMBER:                   ( NEGATION? POSITIVE_INTEGER? ( "." | ",") POSITIVE_INTEGER ) | NAN | INFINITY
 NAN:                            /N((otANum(ber)?)|(aN(um(ber)?)?))/i
 INFINITY:                       /Inf(inity)?/i
 NONZERO_DIGIT:                  /[1-9]/
