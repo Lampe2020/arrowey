@@ -157,7 +157,6 @@ if __name__ == '__main__':
         nl:str='\n'
         ending_parse_trees:tuple[lark.Tree[lark.Token], ...] = tuple(parser.parse(endcode) for endcode in (
             'end: 0',
-            '~ret 0',
             '~ret',
             '~end'
         ))
