@@ -88,7 +88,7 @@ def linearize(code:tuple[str, ...]) -> str:
         except IndexError:
             return codeline # We his a border, meaning we must have hit the end.
 
-class ArroweyTransformer(lark.Transformer_NonRecursive):
+class ArroweyTransformer(lark.Transformer_NonRecursive):    # TODO: Maybe replace this with https://lark-parser.readthedocs.io/en/latest/visitors.html#interpreter?
     """
     Our Arrowey parsetree→AST transformer
     """
