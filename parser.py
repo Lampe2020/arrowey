@@ -59,11 +59,13 @@ def codegrid(code:str) -> tuple[str, ...]:
             longest = len(line)
     return tuple(line.ljust(longest) for line in rawcodegrid) # Return the code grid for access like `grid[row][col]`
 
-def linearize(code:tuple[str, ...]) -> str:
+def linearize(code:tuple[str, ...]|str) -> str:
     """
     Kind-of a preparser,
     converts a code grid into parseable code
     """
+    if isinstance(code, str):
+        code = codegrid(code)
     directions:dict[str, tuple[int,int]] = {
         # move ↓  →
         '↑': (-1, 0),
