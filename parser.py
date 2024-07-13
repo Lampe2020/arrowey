@@ -64,29 +64,45 @@ def linearize(code:tuple[str, ...]) -> str:
     Kind-of a preparser,
     converts a code grid into parseable code
     """
+    directions:dict[str, tuple[int,int]] = {
+        # move ↓  →
+        '↑': (-1, 0),
+        '↓': ( 1, 0),
+        '←': ( 0,-1),
+        '→': ( 0, 1)
+    }
+    arrows:tuple[str,str,str,str] = tuple(directions.keys())
     playhead_pos:tuple[int,int] = (0,0)
     codeline:str = ''
-    lastdir:str = '→'
+    lastdir:str = arrows[-1]
     ellipsis:type = type(...)
     def move(pos:tuple[int,int], direction:str|ellipsis=...):
-        directions = {'←':(0,-1), '↓':(1,0), '↑':(-1,0), '→':(0,1)} # Relative positions
-        if direction in directions.keys():
-            return (
+        if direction in arrows:
+            nonlocal lastdir
+            if direction != lastdir:
+                lastdir = direction
+            newpos:tuple[int,int] = (
                 pos[0] + directions[direction][0],
                 pos[1] + directions[direction][1]
             )
+            if newpos[0]>=0 and newpos[1]>=0:
+                return newpos
+            else:
+                raise IndexError("Negative coords don't exist in arrowey's code grid!") # Trip up border detection
         else:
-            logmsg(-1, f'arrowey.linearize.<move>(): called at position {repr(pos)} with invalid direction {repr(direction)}!')
-            return pos
+            msg:str = (f'arrowey.linearize.<locals>.move(): called at position {repr(pos)} '
+                       f'with invalid direction {repr(direction)}!')
+            logmsg(-3, msg)
+            raise ValueError(msg)
     while True: # Gets stopped by `return` statement
         try:
             codeline += code[playhead_pos[0]][playhead_pos[1]]
-            move(playhead_pos, (
-                codeline[-1] if (code[playhead_pos[0]][playhead_pos[1]] in ('←', '↓', '↑', '→'))
+            playhead_pos = move(playhead_pos, (
+                codeline[-1] if (codeline[-1] in arrows)
                 else lastdir
             ))
         except IndexError:
-            return codeline # We his a border, meaning we must have hit the end.
+            return codeline # We hit a border, meaning we must have hit the end.
 
 class ArroweyTransformer(lark.Transformer_NonRecursive):    # TODO: Maybe replace this with https://lark-parser.readthedocs.io/en/latest/visitors.html#interpreter?
     """
