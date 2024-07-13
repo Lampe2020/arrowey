@@ -50,8 +50,8 @@ def codegrid(code:str) -> tuple[str, ...]:
     rawcodegrid:tuple[str, ...] = code.split('\n')
     if rawcodegrid[0].startswith('#!'):
         rawcodegrid = rawcodegrid[1:] # Remove shebang line
-    if rawcodegrid[0].startswith('# -*- ') and rawcodegrid[0].endswith('-*-'):
-        rawcodegrid = rawcodegrid[1:] # Remove encoding line
+    while rawcodegrid[0].startswith('# -*- ') and rawcodegrid[0].endswith(' -*-'):
+        rawcodegrid = rawcodegrid[1:] # Remove metadata line
     # Measure for the longest line
     longest:int = 0
     for line in rawcodegrid:
