@@ -103,6 +103,9 @@ def linearize(code:tuple[str, ...]|str) -> str:
                 codeline[-1] if (codeline[-1] in arrows)
                 else lastdir
             ))
+            if any(codeline.endswith(f'~{arr}') for arr in arrows):
+                codeline = codeline.removesuffix(codeline[-2:]) # Remove tilde and arrow from end of string,
+                                                                # to allow mid-instruction direction change
         except IndexError:
             return codeline # We hit a border, meaning we must have hit the end.
 
