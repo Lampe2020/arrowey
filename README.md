@@ -1,16 +1,11 @@
 # arrowey   
 An easy, 2D esolang made from an almost-unreadable programming language, both implemented in this repo.   
-> [!WARNING]   
-> *Do not clone the repo to try to run arrowey in a production environment, the code **will** have problems and 
-> **will** crash sometimes because it is between versions!*   
-> If you wish to run arrowey, check out the releases page.   
+> [!NOTE]   
+> Effective immediately, arrowey has been discontinued and replaced by [stackowey](https://github.com/Lampe2020/stackowey)!   
 
 There isn't really a "spec", there's only this implementation of arrowey, the spec is in my head. 
 I'll write documentation later on, at first I want to get it into working shape 
-(i.e. at least most syntax implemented in the parser and first run of a basic I/O and arithmetics program).   
-
-   
-*NOTE: I'm very irregularly working on this project as I don't always have time for it because of school...*   
+(i.e. at least most syntax implemented in the parser and first run of a basic I/O and arithmetics program).
    
    
 # Notes about arrowey itself
@@ -34,4 +29,3 @@ added. A type assignment of `vec(1)` is functionally identical to a type assignm
 casting to a one-dimensional vector converts the given number / given vector's first dimension to float for `vec` or to 
 int for `intvec`. Zero-dimensional vectors are automatically interpreted as `<>` and negative-dimension vectors are 
 interpreted as the same positive-dimension vector (e.g. `vec(-3)` is identical to `vec(3)`).
-* 
